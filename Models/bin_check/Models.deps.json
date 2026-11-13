@@ -1,0 +1,34 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {
+      "Models/1.0.0": {
+        "dependencies": {
+          "AngularJS.Core": "1.8.2"
+        },
+        "runtime": {
+          "Models.dll": {}
+        }
+      },
+      "AngularJS.Core/1.8.2": {}
+    }
+  },
+  "libraries": {
+    "Models/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "AngularJS.Core/1.8.2": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-XqWsLLPPF8KDFYbVPbtpbae1claPLcjyxZgYThdXQri3I2O8SDdMzNafnhIi9nGgg3X6zsu1W0Qj0u5p1wr5mA==",
+      "path": "angularjs.core/1.8.2",
+      "hashPath": "angularjs.core.1.8.2.nupkg.sha512"
+    }
+  }
+}

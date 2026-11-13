@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="vi" ng-app="qlbcApp">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Trang đăng nhập Hệ thống Quản lý Báo chí & Tạp chí" />
+  <title>Đăng nhập - Quản lý Phát hành Báo chí</title>
+
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%234f46e5'><path d='M2 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H2zm12-1a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h12z'/></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+
+  <link rel="stylesheet" href="../css/chung.css" />
+  <link rel="stylesheet" href="../css/thanh-phan.css" />
+  <link rel="stylesheet" href="../css/bieu-mau.css" />
+  <link rel="stylesheet" href="../css/trang/dang-nhap.css" />
+  <style>[ng-cloak] { display: none !important; }</style>
+</head>
+<body class="trang-dang-nhap-body" ng-cloak ng-controller="DangNhapController as vm">
+
+  <div class="nen-trang-tri" aria-hidden="true">
+    <div class="qua-cau-sang qua-cau-1"></div>
+    <div class="qua-cau-sang qua-cau-2"></div>
+  </div>
+
+  <main class="container" id="container" ng-class="{'active': vm.chuyenDangKy}" role="main">
+
+    <!-- Form Đăng Nhập -->
+    <section class="form-container sign-in" aria-labelledby="tieu-de-dang-nhap">
+      <form ng-submit="vm.xuLyDangNhap()" enter-xuong-dong novalidate>
+        <div class="logo-dang-nhap" aria-hidden="true">
+          <i class="bi bi-newspaper"></i>
+        </div>
+        <h1 id="tieu-de-dang-nhap">Đăng Nhập</h1>
+        <p class="phu-de-form">Hệ Thống Quản Lý Phát Hành Báo Chí</p>
+
+        <div class="o-nhap-group">
+          <div class="o-nhap-hop">
+            <i class="bi bi-person bieu-tuong-input" aria-hidden="true"></i>
+            <input type="text" placeholder="Tên đăng nhập" ng-model="vm.username" required />
+          </div>
+
+          <div class="o-nhap-hop">
+            <i class="bi bi-lock bieu-tuong-input" aria-hidden="true"></i>
+            <input type="{{ vm.hienMatKhau ? 'text' : 'password' }}" placeholder="Mật khẩu" ng-model="vm.pass" required />
+            <button type="button" class="nut-hien-mk" ng-click="vm.hienMatKhau = !vm.hienMatKhau" aria-label="Hiện mật khẩu">
+              <i class="bi" ng-class="vm.hienMatKhau ? 'bi-eye-slash' : 'bi-eye'"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Liên kết Đổi mật khẩu ngay trên form đăng nhập -->
+        <div style="display: flex; justify-content: flex-end; width: 100%; max-width: 320px; margin: 6px 0 8px 0;">
+          <a href="javascript:void(0)" ng-click="vm.moModalDoiMatKhau()" style="font-size: 0.82rem; color: #4f46e5; text-decoration: none; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+            <i class="bi bi-key-fill"></i> Đổi mật khẩu?
+          </a>
+        </div>
+
+        <div ng-if="vm.thongBaoLoi" class="thong-bao-loi-dang-nhap" style="color: #e11d48; font-size: 0.85rem; margin-top: 8px; text-align: center; max-width: 320px; word-break: break-word;">
+          <i class="bi bi-exclamation-triangle"></i> {{ vm.thongBaoLoi }}
+        </div>
+
+        <button type="submit" class="nut-dang-nhap" ng-disabled="vm.dangXuLy">
+          <span ng-if="!vm.dangXuLy"><i class="bi bi-box-arrow-in-right"></i> Đăng Nhập</span>
+          <span ng-if="vm.dangXuLy"><i class="bi bi-arrow-repeat quay-vong"></i> Đang xác thực...</span>
+        </button>
+      </form>
+    </section>
+
+    <!-- Form Đăng Ký Tài Khoản Độc Giả -->
+    <section class="form-container sign-up" aria-labelledby="tieu-de-dang-ky">
+      <form ng-submit="vm.xuLyDangKy()" enter-xuong-dong novalidate style="padding: 1rem 2rem;">
+        <h1 id="tieu-de-dang-ky" style="font-size: 1.5rem; margin-bottom: 4px;">Tạo Tài Khoản</h1>
+        <p class="phu-de-form" style="margin-bottom: 12px;">Đăng ký tài khoản Độc giả đọc báo toàn quốc</p>
+
+        <div class="o-nhap-group" style="gap: 10px; margin-bottom: 10px;">
+          <div class="o-nhap-hop">
+            <i class="bi bi-card-text bieu-tuong-input"></i>
+            <input type="text" placeholder="Họ và tên *" ng-model="vm.dk.hoTen" ng-change="vm.kiemTraDinhDang('hoTen')" required style="padding: 10px 42px;" />
+          </div>
+          <div class="o-nhap-hop">
+            <i class="bi bi-person bieu-tuong-input"></i>
+            <input type="text" placeholder="Tên đăng nhập *" ng-model="vm.dk.tenDangNhap" ng-change="vm.kiemTraDinhDang('tenDangNhap')" required style="padding: 10px 42px;" />
+          </div>
+          <div class="o-nhap-hop">
+            <i class="bi bi-envelope bieu-tuong-input"></i>
+            <input type="email" placeholder="Địa chỉ Email *" ng-model="vm.dk.email" ng-change="vm.kiemTraDinhDang('email')" required style="padding: 10px 42px;" />
+          </div>
+          <div class="o-nhap-hop">
+            <i class="bi bi-telephone bieu-tuong-input"></i>
+            <input type="text" placeholder="Số điện thoại *" ng-model="vm.dk.soDienThoai" ng-change="vm.kiemTraDinhDang('soDienThoai')" maxlength="11" style="padding: 10px 42px;" />
+          </div>
+          <div class="o-nhap-hop">
+            <i class="bi bi-geo-alt bieu-tuong-input"></i>
+            <input type="text" placeholder="Địa chỉ giao báo" ng-model="vm.dk.diaChi" style="padding: 10px 42px;" />
+          </div>
+          <div class="o-nhap-hop">
+            <i class="bi bi-lock bieu-tuong-input"></i>
+            <input type="password" placeholder="Mật khẩu *" ng-model="vm.dk.matKhau" ng-change="vm.kiemTraDinhDang('matKhau')" required style="padding: 10px 42px;" />
+          </div>
+        </div>
+
+        <div ng-if="vm.thongBaoDk" style="font-size: 0.85rem; margin-top: 6px; text-align: center;" ng-style="{'color': vm.dkThanhCong ? '#10b981' : '#e11d48'}">
+          {{ vm.thongBaoDk }}
+        </div>
+
+        <button type="submit" class="nut-dang-nhap" style="margin-top: 10px;" ng-disabled="vm.dangXuLyDk">
+          <span ng-if="!vm.dangXuLyDk"><i class="bi bi-person-plus"></i> Đăng Ký Độc Giả</span>
+          <span ng-if="vm.dangXuLyDk">Đang đăng ký...</span>
+        </button>
+      </form>
+    </section>
+
+    <!-- Panel Trượt Toggle -->
+    <aside class="toggle-container" aria-label="Bảng chuyển đổi">
+      <div class="toggle">
+        <div class="toggle-panel toggle-left">
+          <div class="toggle-icon-wrap"><i class="bi bi-person-check-fill"></i></div>
+          <h1>Đã Có Tài Khoản?</h1>
+          <p>Đăng nhập ngay để theo dõi các ấn phẩm báo chí và quản lý thuê bao đặt báo.</p>
+          <button type="button" class="ghost-btn" ng-click="vm.chuyenDangKy = false">
+            <i class="bi bi-arrow-left-circle"></i> Đăng Nhập
+          </button>
+        </div>
+
+        <div class="toggle-panel toggle-right">
+          <div class="toggle-icon-wrap"><i class="bi bi-newspaper"></i></div>
+          <h1>Tòa Soạn Báo Chí</h1>
+          <p>Hệ thống kết nối trực tiếp bạn đọc, ban biên tập và mạng lưới bưu cục phát hành báo.</p>
+          <button type="button" class="ghost-btn" ng-click="vm.chuyenDangKy = true">
+            Đăng Ký Độc Giả Mới <i class="bi bi-arrow-right-circle"></i>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+  </main>
+
+  <!-- Modal Đổi Mật Khẩu Popup -->
+  <div class="modal-nen" ng-class="{'hien': vm.hienModalDoiMk}" ng-if="vm.hienModalDoiMk" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 10000;">
+    <div class="modal-hop" style="background: #ffffff; border-radius: 18px; width: 92%; max-width: 440px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); overflow: hidden;">
+      <div class="modal-dau" style="padding: 1.15rem 1.5rem; background: linear-gradient(135deg, #4f46e5, #6366f1); color: #fff; display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <i class="bi bi-key-fill" style="font-size: 1.3rem;"></i>
+          <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: #fff;">Đổi Mật Khẩu</h3>
+        </div>
+        <button type="button" ng-click="vm.dongModalDoiMatKhau()" style="background: rgba(255,255,255,0.2); border: none; color: #fff; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1rem;" title="Đóng">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <form ng-submit="vm.xuLyDoiMatKhau()" enter-xuong-dong style="padding: 1.5rem;" novalidate>
+        <p style="font-size: 0.85rem; color: #64748b; margin-top: 0; margin-bottom: 1.1rem; line-height: 1.45;">
+          Nhập tên đăng nhập, mật khẩu hiện tại và mật khẩu mới để đổi mật khẩu tài khoản.
+        </p>
+
+        <div style="margin-bottom: 12px;">
+          <label style="display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 4px; color: #334155;">
+            Tên đăng nhập <span style="color: #ef4444;">*</span>
+          </label>
+          <div class="o-nhap-hop" style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; display: flex; align-items: center; padding: 0 12px;">
+            <i class="bi bi-person" style="color: #64748b; margin-right: 8px;"></i>
+            <input type="text" placeholder="Nhập tên đăng nhập" ng-model="vm.doiMk.tenDangNhap" required style="border: none; background: transparent; width: 100%; height: 40px; outline: none; font-size: 0.9rem;" />
+          </div>
+        </div>
+
+        <div style="margin-bottom: 12px;">
+          <label style="display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 4px; color: #334155;">
+            Mật khẩu hiện tại <span style="color: #ef4444;">*</span>
+          </label>
+          <div class="o-nhap-hop" style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; display: flex; align-items: center; padding: 0 12px;">
+            <i class="bi bi-lock" style="color: #64748b; margin-right: 8px;"></i>
+            <input type="{{ vm.doiMk.hienMatKhauCu ? 'text' : 'password' }}" placeholder="Nhập mật khẩu hiện tại" ng-model="vm.doiMk.matKhauCu" required style="border: none; background: transparent; width: 100%; height: 40px; outline: none; font-size: 0.9rem;" />
+            <button type="button" ng-click="vm.doiMk.hienMatKhauCu = !vm.doiMk.hienMatKhauCu" style="background: none; border: none; cursor: pointer; color: #94a3b8;" tabindex="-1">
+              <i class="bi" ng-class="vm.doiMk.hienMatKhauCu ? 'bi-eye-slash' : 'bi-eye'"></i>
+            </button>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 12px;">
+          <label style="display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 4px; color: #334155;">
+            Mật khẩu mới <span style="color: #ef4444;">*</span>
+          </label>
+          <div class="o-nhap-hop" style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; display: flex; align-items: center; padding: 0 12px;">
+            <i class="bi bi-shield-lock" style="color: #64748b; margin-right: 8px;"></i>
+            <input type="{{ vm.doiMk.hienMatKhauMoi ? 'text' : 'password' }}" placeholder="Tối thiểu 6 ký tự" ng-model="vm.doiMk.matKhauMoi" required style="border: none; background: transparent; width: 100%; height: 40px; outline: none; font-size: 0.9rem;" />
+            <button type="button" ng-click="vm.doiMk.hienMatKhauMoi = !vm.doiMk.hienMatKhauMoi" style="background: none; border: none; cursor: pointer; color: #94a3b8;" tabindex="-1">
+              <i class="bi" ng-class="vm.doiMk.hienMatKhauMoi ? 'bi-eye-slash' : 'bi-eye'"></i>
+            </button>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 14px;">
+          <label style="display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 4px; color: #334155;">
+            Xác nhận mật khẩu mới <span style="color: #ef4444;">*</span>
+          </label>
+          <div class="o-nhap-hop" style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; display: flex; align-items: center; padding: 0 12px;">
+            <i class="bi bi-shield-check" style="color: #64748b; margin-right: 8px;"></i>
+            <input type="{{ vm.doiMk.hienMatKhauMoi ? 'text' : 'password' }}" placeholder="Nhập lại mật khẩu mới" ng-model="vm.doiMk.xacNhanMatKhau" required style="border: none; background: transparent; width: 100%; height: 40px; outline: none; font-size: 0.9rem;" />
+          </div>
+        </div>
+
+        <div ng-if="vm.thongBaoDoiMk" style="font-size: 0.85rem; margin-bottom: 14px; padding: 10px 12px; border-radius: 8px; text-align: left; word-break: break-word;"
+             ng-style="{'background': vm.doiMkThanhCong ? '#ecfdf5' : '#fff1f2', 'color': vm.doiMkThanhCong ? '#065f46' : '#9f1239', 'border': vm.doiMkThanhCong ? '1px solid #a7f3d0' : '1px solid #fecdd3'}">
+          <i class="bi" ng-class="vm.doiMkThanhCong ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'" style="margin-right: 6px;"></i>
+          {{ vm.thongBaoDoiMk }}
+        </div>
+
+        <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px;">
+          <button type="button" class="nut nut-phu" ng-click="vm.dongModalDoiMatKhau()" ng-disabled="vm.dangXuLyDoiMk" style="padding: 8px 16px; border-radius: 8px; border: 1px solid #cbd5e1; background: #fff; cursor: pointer; font-size: 0.88rem;">
+            Hủy
+          </button>
+          <button type="submit" class="nut nut-chinh" ng-disabled="vm.dangXuLyDoiMk" style="padding: 8px 18px; border-radius: 8px; background: #4f46e5; color: #fff; border: none; cursor: pointer; font-weight: 600; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 6px;">
+            <span ng-if="!vm.dangXuLyDoiMk"><i class="bi bi-check2"></i> Xác Nhận Đổi</span>
+            <span ng-if="vm.dangXuLyDoiMk"><i class="bi bi-arrow-repeat quay-vong"></i> Đang xử lý...</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Script nạp AngularJS và Controller -->
+  <script src="../angular.min.js"></script>
+  <script src="../js/cau-hinh.js"></script>
+  <script src="../js/angular-app.js"></script>
+  <script src="../js/xac-thuc.js"></script>
+  <script src="../js/tien-ich.js"></script>
+  <script src="../js/goi-api.js"></script>
+
+  <script>
+    angular.module('qlbcApp')
+      .controller('DangNhapController', ['GoiApiService', '$timeout', function(GoiApiService, $timeout) {
+        var vm = this;
+        vm.username = '';
+        vm.pass = '';
+        vm.hienMatKhau = false;
+        vm.dangXuLy = false;
+        vm.thongBaoLoi = '';
+        vm.chuyenDangKy = false;
+
+        vm.dk = {
+          hoTen: '',
+          tenDangNhap: '',
+          email: '',
+          matKhau: '',
+          soDienThoai: '',
+          diaChi: '',
+          vaiTro: 'DocGia'
+        };
+
+        vm.xuLyDangNhap = function() {
+          if (!vm.username || !vm.pass) {
+            vm.thongBaoLoi = 'Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu!';
+            return;
+          }
+          vm.dangXuLy = true;
+          vm.thongBaoLoi = '';
+
+          GoiApiService.dangNhap({
+            tenDangNhap: vm.username,
+            matKhau: vm.pass
+          }).then(function(res) {
+            vm.dangXuLy = false;
+            var resData = res.data;
+            if (resData && (resData.success || resData.token || resData.accessToken || resData.data)) {
+              var authInfo = resData.data || resData;
+              var quyen = authInfo.quyenHan || authInfo.vaiTro || authInfo.role || 'DocGia';
+              
+              var vaiTroChuan = 'DocGia';
+              if (quyen === 'Admin' || quyen === 1 || quyen === 'admin') vaiTroChuan = 'Admin';
+              else if (quyen === 'Biên tập viên' || quyen === 'BienTapVien' || quyen === 2 || quyen === 'bientap') vaiTroChuan = 'BienTapVien';
+              else vaiTroChuan = 'DocGia';
+
+              var user = {
+                maNguoiDung: authInfo.maNguoiDung,
+                tenDangNhap: authInfo.tenDangNhap || vm.username,
+                hoTen: authInfo.hoTen || vm.username,
+                email: authInfo.email,
+                vaiTro: vaiTroChuan,
+                quyenHan: authInfo.quyenHan || vaiTroChuan,
+                maDocGia: authInfo.maDocGia
+              };
+
+              var token = authInfo.accessToken || authInfo.token || ('token-' + Date.now());
+              var refreshToken = authInfo.refreshToken || '';
+              XacThuc.luuPhien(user, token, refreshToken);
+              window.location.replace('tong-quan.html');
+            } else {
+              vm.thongBaoLoi = (resData && resData.message) ? resData.message : 'Tên đăng nhập hoặc mật khẩu không chính xác!';
+            }
+          }).catch(function(err) {
+            vm.dangXuLy = false;
+            console.error('Lỗi đăng nhập:', err);
+            if (err.data && err.data.message) {
+              vm.thongBaoLoi = err.data.message;
+            } else if (err.status === 502) {
+              vm.thongBaoLoi = 'Lỗi 502 Bad Gateway: Service API_Login (cổng 5171) chưa chạy! Vui lòng khởi động API_Login trong Visual Studio.';
+            } else if (err.status === 401) {
+              vm.thongBaoLoi = 'Sai tên đăng nhập hoặc mật khẩu!';
+            } else if (err.status === 0 || err.status === -1) {
+              vm.thongBaoLoi = 'Không thể kết nối API Gateway. Hãy đảm bảo API_GateWay đang chạy!';
+            } else {
+              vm.thongBaoLoi = 'Lỗi máy chủ (' + (err.status || 'Mạng') + '). Vui lòng kiểm tra các Microservice!';
+            }
+          });
+        };
+
+        vm.kiemTraDinhDang = function(truong) {
+          // Bắt lỗi thời gian thực khi đang gõ
+          if (truong === 'hoTen' && vm.dk.hoTen) {
+            if (/\d/.test(vm.dk.hoTen)) {
+              vm.thongBaoDk = 'Họ và tên không được chứa chữ số!';
+              vm.dkThanhCong = false;
+              return false;
+            }
+            if (/[!@#$%^&*()_+=\[\]{};':"\\|,.<>\/?~`]/.test(vm.dk.hoTen)) {
+              vm.thongBaoDk = 'Họ và tên không được chứa ký tự đặc biệt!';
+              vm.dkThanhCong = false;
+              return false;
+            }
+          }
+          if (truong === 'tenDangNhap' && vm.dk.tenDangNhap) {
+            if (/\s/.test(vm.dk.tenDangNhap)) {
+              vm.thongBaoDk = 'Tên đăng nhập không được chứa khoảng trắng!';
+              vm.dkThanhCong = false;
+              return false;
+            }
+          }
+          if (truong === 'soDienThoai' && vm.dk.soDienThoai) {
+            if (/[a-zA-Z]/.test(vm.dk.soDienThoai)) {
+              vm.thongBaoDk = 'Số điện thoại không được chứa chữ cái, chỉ được nhập số!';
+              vm.dkThanhCong = false;
+              return false;
+            }
+          }
+
+          // Xóa thông báo lỗi cũ nếu đã sửa hợp lệ
+          if (vm.thongBaoDk && (
+              vm.thongBaoDk.indexOf('chữ số') !== -1 ||
+              vm.thongBaoDk.indexOf('chữ cái') !== -1 ||
+              vm.thongBaoDk.indexOf('khoảng trắng') !== -1 ||
+              vm.thongBaoDk.indexOf('ký tự đặc biệt') !== -1
+          )) {
+            vm.thongBaoDk = '';
+          }
+          return true;
+        };
+
+        vm.xuLyDangKy = function() {
+          vm.thongBaoDk = '';
+          vm.dkThanhCong = false;
+
+          // 1. Kiểm tra Họ và tên
+          if (!vm.dk.hoTen || !vm.dk.hoTen.trim()) {
+            vm.thongBaoDk = 'Vui lòng nhập Họ và tên!';
+            return;
+          }
+          if (/\d/.test(vm.dk.hoTen)) {
+            vm.thongBaoDk = 'Họ và tên không được chứa chữ số!';
+            return;
+          }
+          if (/[!@#$%^&*()_+=\[\]{};':"\\|,.<>\/?~`]/.test(vm.dk.hoTen)) {
+            vm.thongBaoDk = 'Họ và tên không được chứa ký tự đặc biệt!';
+            return;
+          }
+          if (vm.dk.hoTen.trim().length < 2) {
+            vm.thongBaoDk = 'Họ và tên phải có ít nhất 2 ký tự!';
+            return;
+          }
+
+          // 2. Kiểm tra Tên đăng nhập
+          if (!vm.dk.tenDangNhap || !vm.dk.tenDangNhap.trim()) {
+            vm.thongBaoDk = 'Vui lòng nhập Tên đăng nhập!';
+            return;
+          }
+          if (/\s/.test(vm.dk.tenDangNhap)) {
+            vm.thongBaoDk = 'Tên đăng nhập không được chứa khoảng trắng!';
+            return;
+          }
+          if (!/^[a-zA-Z0-9_]{3,30}$/.test(vm.dk.tenDangNhap.trim())) {
+            vm.thongBaoDk = 'Tên đăng nhập phải từ 3-30 ký tự, viết liền không dấu và không chứa ký tự đặc biệt!';
+            return;
+          }
+
+          // 3. Kiểm tra Email
+          if (!vm.dk.email || !vm.dk.email.trim()) {
+            vm.thongBaoDk = 'Vui lòng nhập Địa chỉ Email!';
+            return;
+          }
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(vm.dk.email.trim())) {
+            vm.thongBaoDk = 'Email không hợp lệ. Vui lòng nhập đúng định dạng (VD: docgia@gmail.com)!';
+            return;
+          }
+
+          // 4. Kiểm tra Số điện thoại
+          if (vm.dk.soDienThoai && vm.dk.soDienThoai.trim()) {
+            var sdt = vm.dk.soDienThoai.trim();
+            if (/[a-zA-Z]/.test(sdt)) {
+              vm.thongBaoDk = 'Số điện thoại không được chứa chữ cái!';
+              return;
+            }
+            if (!/^0[0-9]{9,10}$/.test(sdt)) {
+              vm.thongBaoDk = 'Số điện thoại phải gồm 10 chữ số và bắt đầu bằng số 0 (VD: 0912345678)!';
+              return;
+            }
+          }
+
+          // 5. Kiểm tra Mật khẩu
+          if (!vm.dk.matKhau) {
+            vm.thongBaoDk = 'Vui lòng nhập Mật khẩu!';
+            return;
+          }
+          if (vm.dk.matKhau.length < 6) {
+            vm.thongBaoDk = 'Mật khẩu phải có độ dài tối thiểu 6 ký tự!';
+            return;
+          }
+
+          vm.dangXuLyDk = true;
+          vm.thongBaoDk = '';
+
+          GoiApiService.dangKy(vm.dk).then(function(res) {
+            vm.dangXuLyDk = false;
+            vm.dkThanhCong = true;
+            vm.thongBaoDk = 'Đăng ký thành công! Đang chuyển sang trang Đăng nhập...';
+            $timeout(function() {
+              vm.chuyenDangKy = false;
+              vm.username = vm.dk.tenDangNhap;
+              vm.pass = vm.dk.matKhau;
+            }, 1500);
+          }).catch(function(err) {
+            vm.dangXuLyDk = false;
+            vm.dkThanhCong = false;
+            vm.thongBaoDk = (err.data && err.data.message) ? err.data.message : 'Đăng ký thất bại. Tên đăng nhập hoặc email có thể đã tồn tại!';
+          });
+        };
+
+        // --- 3. ĐỔI MẬT KHẨU TẠI MÀN HÌNH ĐĂNG NHẬP ---
+        vm.hienModalDoiMk = false;
+        vm.dangXuLyDoiMk = false;
+        vm.thongBaoDoiMk = '';
+        vm.doiMkThanhCong = false;
+        vm.doiMk = {
+          tenDangNhap: '',
+          matKhauCu: '',
+          matKhauMoi: '',
+          xacNhanMatKhau: '',
+          hienMatKhauCu: false,
+          hienMatKhauMoi: false
+        };
+
+        vm.moModalDoiMatKhau = function() {
+          vm.hienModalDoiMk = true;
+          vm.thongBaoDoiMk = '';
+          vm.doiMkThanhCong = false;
+          vm.doiMk = {
+            tenDangNhap: vm.username || '',
+            matKhauCu: '',
+            matKhauMoi: '',
+            xacNhanMatKhau: '',
+            hienMatKhauCu: false,
+            hienMatKhauMoi: false
+          };
+        };
+
+        vm.dongModalDoiMatKhau = function() {
+          vm.hienModalDoiMk = false;
+          vm.thongBaoDoiMk = '';
+        };
+
+        vm.xuLyDoiMatKhau = function() {
+          if (!vm.doiMk.tenDangNhap) {
+            vm.thongBaoDoiMk = 'Vui lòng nhập tên đăng nhập!';
+            vm.doiMkThanhCong = false;
+            return;
+          }
+          if (!vm.doiMk.matKhauCu) {
+            vm.thongBaoDoiMk = 'Vui lòng nhập mật khẩu hiện tại!';
+            vm.doiMkThanhCong = false;
+            return;
+          }
+          if (!vm.doiMk.matKhauMoi) {
+            vm.thongBaoDoiMk = 'Vui lòng nhập mật khẩu mới!';
+            vm.doiMkThanhCong = false;
+            return;
+          }
+          if (vm.doiMk.matKhauMoi.length < 6) {
+            vm.thongBaoDoiMk = 'Mật khẩu mới phải có tối thiểu 6 ký tự!';
+            vm.doiMkThanhCong = false;
+            return;
+          }
+          if (vm.doiMk.matKhauMoi !== vm.doiMk.xacNhanMatKhau) {
+            vm.thongBaoDoiMk = 'Mật khẩu xác nhận không khớp với mật khẩu mới!';
+            vm.doiMkThanhCong = false;
+            return;
+          }
+          if (vm.doiMk.matKhauMoi === vm.doiMk.matKhauCu) {
+            vm.thongBaoDoiMk = 'Mật khẩu mới không được trùng với mật khẩu hiện tại!';
+            vm.doiMkThanhCong = false;
+            return;
+          }
+
+          vm.dangXuLyDoiMk = true;
+          vm.thongBaoDoiMk = '';
+
+          // Bước 1: Xác thực mật khẩu cũ bằng cách gọi API Đăng Nhập
+          GoiApiService.dangNhap({
+            tenDangNhap: vm.doiMk.tenDangNhap,
+            matKhau: vm.doiMk.matKhauCu
+          }).then(function(resLogin) {
+            var dataLogin = resLogin.data;
+            var authInfo = dataLogin.data || dataLogin;
+            var token = authInfo.accessToken || authInfo.token;
+            var maNguoiDung = authInfo.maNguoiDung;
+
+            if (!token || !maNguoiDung) {
+              vm.dangXuLyDoiMk = false;
+              vm.doiMkThanhCong = false;
+              vm.thongBaoDoiMk = 'Không thể xác thực danh tính người dùng!';
+              return;
+            }
+
+            // Lưu tạm token để interceptor gắn Authorization: Bearer <token>
+            XacThuc.luuPhien({ maNguoiDung: maNguoiDung, tenDangNhap: vm.doiMk.tenDangNhap }, token);
+
+            // Bước 2: Gọi API Đổi Mật Khẩu
+            GoiApiService.doiMatKhau({
+              maNguoiDung: maNguoiDung,
+              matKhauCu: vm.doiMk.matKhauCu,
+              matKhauMoi: vm.doiMk.matKhauMoi
+            }).then(function(resDoiMk) {
+              vm.dangXuLyDoiMk = false;
+              vm.doiMkThanhCong = true;
+              vm.thongBaoDoiMk = 'Đổi mật khẩu thành công! Vui lòng đăng nhập với mật khẩu mới.';
+
+              // Xóa token phiên tạm
+              XacThuc.dangXuat();
+
+              // Cập nhật sẵn vào ô đăng nhập chính
+              vm.username = vm.doiMk.tenDangNhap;
+              vm.pass = vm.doiMk.matKhauMoi;
+
+              // Tự động đóng modal sau 1.8 giây
+              $timeout(function() {
+                vm.hienModalDoiMk = false;
+              }, 1800);
+            }).catch(function(errDoiMk) {
+              vm.dangXuLyDoiMk = false;
+              vm.doiMkThanhCong = false;
+              XacThuc.dangXuat();
+              var msg = (errDoiMk.data && errDoiMk.data.message) ? errDoiMk.data.message : 'Đổi mật khẩu thất bại!';
+              vm.thongBaoDoiMk = msg;
+            });
+
+          }).catch(function(errLogin) {
+            vm.dangXuLyDoiMk = false;
+            vm.doiMkThanhCong = false;
+            XacThuc.dangXuat();
+            if (errLogin.status === 401 || (errLogin.data && errLogin.data.message)) {
+              vm.thongBaoDoiMk = 'Tên đăng nhập hoặc mật khẩu hiện tại không chính xác!';
+            } else if (errLogin.status === 502) {
+              vm.thongBaoDoiMk = 'Lỗi 502: Service API_Login chưa phản hồi!';
+            } else {
+              vm.thongBaoDoiMk = 'Lỗi kết nối máy chủ (' + (errLogin.status || 'Mạng') + ')!';
+            }
+          });
+        };
+      }]);
+  </script>
+</body>
+</html>

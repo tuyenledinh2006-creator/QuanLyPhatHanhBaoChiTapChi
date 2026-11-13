@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="vi" ng-app="qlbcApp">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Hồ sơ cá nhân và cập nhật thông tin tài khoản" />
+  <title>Thông Tin Cá Nhân - Quản lý Báo chí</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%232563eb'><path d='M2 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H2zm12-1a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h12z'/></svg>" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="../css/chung.css" />
+  <link rel="stylesheet" href="../css/bo-cuc.css" />
+  <link rel="stylesheet" href="../css/thanh-phan.css" />
+  <link rel="stylesheet" href="../css/bieu-mau.css" />
+  <style>[ng-cloak] { display: none !important; }</style>
+</head>
+<body ng-cloak ng-controller="ThongTinCaNhanController as vm">
+  <div id="ung-dung">
+    <div id="overlay-sidebar"></div>
+
+    <!-- Sidebar Trái -->
+    <aside id="sidebar" aria-label="Thanh bên điều hướng">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-icon"><i class="bi bi-newspaper"></i></div>
+        <div class="sidebar-logo-ten">Quản Lý Báo Chí</div>
+        <button id="nut-thu-gon-sidebar" type="button" class="nut nut-vien nut-nho" title="Thu gọn / Mở rộng">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+      </div>
+      <nav class="sidebar-noi-dung" aria-label="Menu điều hướng chính"></nav>
+      <div class="sidebar-footer"></div>
+    </aside>
+
+    <!-- Khu Vực Nội Dung Chính -->
+    <div id="vung-chinh">
+      <header id="header" style="justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <h1 style="font-size: 1.25rem; font-weight: 700; color: var(--xam-900); margin: 0; display: flex; align-items: center; gap: 8px;">
+            <i class="bi bi-person-badge text-primary"></i> Hồ Sơ & Thông Tin Cá Nhân
+          </h1>
+          <span class="badge" ng-class="vm.mauBadge" style="font-size: 0.75rem;" ng-bind="vm.tenVaiTro"></span>
+        </div>
+        <div style="display: flex; gap: 0.75rem; align-items: center;">
+          <button class="nut nut-phu nut-nho" ng-click="vm.taiThongTin()" title="Tải lại dữ liệu">
+            <i class="bi bi-arrow-clockwise"></i> Làm Mới
+          </button>
+          <a href="tong-quan.html" class="nut nut-vien nut-nho">
+            <i class="bi bi-house"></i> Trang Chủ
+          </a>
+          <button onclick="XacThuc.dangXuat()" class="nut nut-nguy-hiem nut-nho" title="Đăng xuất">
+            <i class="bi bi-box-arrow-right"></i> Đăng Xuất
+          </button>
+        </div>
+      </header>
+
+      <main class="vung-lam-viec" style="padding: 1.5rem; max-width: 1100px; margin: 0 auto; width: 100%;">
+        
+        <!-- Bố cục 2 cột: Cột trái (Tóm tắt hồ sơ), Cột phải (Tabs Chỉnh sửa & Đổi MK) -->
+        <div style="display: grid; grid-template-columns: 320px 1fr; gap: 1.5rem; align-items: start;">
+          
+          <!-- Cột Trái: Card Thông Tin Tóm Tắt -->
+          <div class="the" style="padding: 1.75rem 1.25rem; text-align: center; border-radius: 16px; box-shadow: var(--bong-md); background: #ffffff;">
+            <!-- Avatar tròn -->
+            <div style="width: 88px; height: 88px; border-radius: 50%; background: linear-gradient(135deg, #4f46e5, #818cf8); color: #fff; font-size: 2.25rem; font-weight: 800; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem auto; box-shadow: 0 10px 20px -5px rgba(79, 70, 229, 0.4);" ng-bind="(vm.hoSo.hoTen || vm.hoSo.tenDangNhap || 'U').charAt(0).toUpperCase()"></div>
+            
+            <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--xam-900); margin: 0 0 4px 0;" ng-bind="vm.hoSo.hoTen || vm.hoSo.tenDangNhap"></h2>
+            <div style="color: var(--xam-500); font-size: 0.88rem; margin-bottom: 10px;">
+              @<span ng-bind="vm.hoSo.tenDangNhap"></span>
+            </div>
+
+            <div style="margin-bottom: 1.25rem;">
+              <span class="badge" ng-class="vm.mauBadge" style="font-size: 0.8rem; padding: 4px 10px;">
+                <i class="bi bi-shield-check"></i> <span ng-bind="vm.tenVaiTro"></span>
+              </span>
+            </div>
+
+            <hr style="border: none; border-top: 1px solid var(--xam-200); margin: 1rem 0;" />
+
+            <!-- Chi tiết tóm lược -->
+            <div style="text-align: left; display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.88rem;">
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--xam-500);"><i class="bi bi-hash"></i> Mã tài khoản:</span>
+                <strong style="color: var(--xam-800);">#{{ vm.hoSo.maNguoiDung || vm.nguoiDung.maNguoiDung }}</strong>
+              </div>
+
+              <div ng-if="vm.hoSo.maDocGia" style="display: flex; justify-content: space-between;">
+                <span style="color: var(--xam-500);"><i class="bi bi-person-vcard"></i> Mã độc giả:</span>
+                <strong style="color: #4f46e5;">#{{ vm.hoSo.maDocGia }}</strong>
+              </div>
+
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--xam-500);"><i class="bi bi-check-circle text-success"></i> Trạng thái:</span>
+                <span class="badge badge-xanh" style="font-size: 0.75rem;">Đang hoạt động</span>
+              </div>
+
+              <div ng-if="vm.hoSo.email" style="display: flex; justify-content: space-between; word-break: break-all;">
+                <span style="color: var(--xam-500);"><i class="bi bi-envelope"></i> Email:</span>
+                <span style="color: var(--xam-800); font-weight: 500;">{{ vm.hoSo.email }}</span>
+              </div>
+
+              <div ng-if="vm.hoSo.soDienThoai" style="display: flex; justify-content: space-between;">
+                <span style="color: var(--xam-500);"><i class="bi bi-telephone"></i> SĐT:</span>
+                <span style="color: var(--xam-800); font-weight: 500;">{{ vm.hoSo.soDienThoai }}</span>
+              </div>
+
+              <div ng-if="vm.hoSo.diaChi" style="display: flex; flex-direction: column; gap: 2px;">
+                <span style="color: var(--xam-500);"><i class="bi bi-geo-alt"></i> Địa chỉ giao báo:</span>
+                <span style="color: var(--xam-800); font-weight: 500; padding-left: 18px;">{{ vm.hoSo.diaChi }}</span>
+              </div>
+            </div>
+
+            <!-- Phím tắt dành cho Độc giả -->
+            <div ng-if="vm.vaiTro === 'DocGia'" style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 8px;">
+              <a href="quan-ly-dang-ky.html" class="nut nut-chinh nut-nho" style="width: 100%; justify-content: center;">
+                <i class="bi bi-cart-plus"></i> Quản Lý Thuê Bao Đặt Báo
+              </a>
+              <a href="quan-ly-thanh-toan.html" class="nut nut-phu nut-nho" style="width: 100%; justify-content: center;">
+                <i class="bi bi-credit-card-2-front"></i> Hóa Đơn & Thanh Toán
+              </a>
+              <a href="lich-su-giao-bao.html" class="nut nut-vien nut-nho" style="width: 100%; justify-content: center;">
+                <i class="bi bi-box-seam"></i> Lịch Sử Nhận Báo Định Kỳ
+              </a>
+            </div>
+          </div>
+
+          <!-- Cột Phải: Card Chỉnh Sửa & Đổi Mật Khẩu với Tabs -->
+          <div class="the" style="border-radius: 16px; box-shadow: var(--bong-md); background: #ffffff; overflow: hidden;">
+            
+            <!-- Tab Headers -->
+            <div style="display: flex; border-bottom: 1px solid var(--xam-200); background: #fafafa;">
+              <button type="button" ng-click="vm.tabHienTai = 'thong-tin'" 
+                      style="flex: 1; padding: 1rem 1.25rem; font-size: 0.95rem; font-weight: 600; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;"
+                      ng-style="{'background': vm.tabHienTai === 'thong-tin' ? '#ffffff' : 'transparent', 'color': vm.tabHienTai === 'thong-tin' ? '#4f46e5' : '#64748b', 'border-bottom': vm.tabHienTai === 'thong-tin' ? '3px solid #4f46e5' : 'none'}">
+                <i class="bi bi-pencil-square"></i> Cập Nhật Thông Tin Cá Nhân
+              </button>
+              <button type="button" ng-click="vm.tabHienTai = 'mat-khau'" 
+                      style="flex: 1; padding: 1rem 1.25rem; font-size: 0.95rem; font-weight: 600; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;"
+                      ng-style="{'background': vm.tabHienTai === 'mat-khau' ? '#ffffff' : 'transparent', 'color': vm.tabHienTai === 'mat-khau' ? '#4f46e5' : '#64748b', 'border-bottom': vm.tabHienTai === 'mat-khau' ? '3px solid #4f46e5' : 'none'}">
+                <i class="bi bi-key-fill"></i> Đổi Mật Khẩu Bảo Mật
+              </button>
+            </div>
+
+            <!-- Tab 1: Form Sửa Thông Tin Cá Nhân -->
+            <div ng-show="vm.tabHienTai === 'thong-tin'" style="padding: 1.75rem;">
+              <div style="margin-bottom: 1.25rem;">
+                <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--xam-900); margin: 0 0 4px 0;">
+                  Chỉnh Sửa Hồ Sơ Cá Nhân
+                </h3>
+                <p style="color: var(--xam-500); font-size: 0.85rem; margin: 0;">
+                  Thay đổi thông tin liên lạc, số điện thoại và địa chỉ giao báo để thuận tiện cho việc phát hành.
+                </p>
+              </div>
+
+              <!-- Thông báo kết quả lưu -->
+              <div ng-if="vm.thongBao" class="thong-bao" ng-class="{'thong-bao-thanh-cong': vm.thanhCong, 'thong-bao-loi': !vm.thanhCong}" style="margin-bottom: 1.25rem;">
+                <i class="bi" ng-class="vm.thanhCong ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'"></i>
+                {{ vm.thongBao }}
+              </div>
+
+              <form ng-submit="vm.luuThongTin()" novalidate>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                  <!-- Tên đăng nhập (Readonly) -->
+                  <div class="nhom-bieu-mau">
+                    <label class="nhan-bieu-mau">Tên đăng nhập (Cố định)</label>
+                    <div style="position: relative;">
+                      <input type="text" class="o-nhap" ng-model="vm.hoSo.tenDangNhap" readonly style="background-color: var(--xam-100); color: var(--xam-600); cursor: not-allowed; padding-left: 36px;" />
+                      <i class="bi bi-lock-fill" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--xam-400);"></i>
+                    </div>
+                  </div>
+
+                  <!-- Vai trò (Readonly) -->
+                  <div class="nhom-bieu-mau">
+                    <label class="nhan-bieu-mau">Quyền hạn / Vai trò</label>
+                    <div style="position: relative;">
+                      <input type="text" class="o-nhap" value="{{ vm.tenVaiTro }}" readonly style="background-color: var(--xam-100); color: var(--xam-600); cursor: not-allowed; padding-left: 36px;" />
+                      <i class="bi bi-shield-lock-fill" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--xam-400);"></i>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="nhom-bieu-mau" style="margin-top: 1rem;">
+                  <label class="nhan-bieu-mau">Họ và tên <span class="dau-sao">*</span></label>
+                  <div style="position: relative;">
+                    <input type="text" class="o-nhap" ng-model="vm.hoSo.hoTen" required placeholder="Nhập họ và tên đầy đủ" style="padding-left: 36px;" />
+                    <i class="bi bi-person" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--xam-400);"></i>
+                  </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+                  <!-- Email -->
+                  <div class="nhom-bieu-mau">
+                    <label class="nhan-bieu-mau">Địa chỉ Email <span class="dau-sao">*</span></label>
+                    <div style="position: relative;">
+                      <input type="email" class="o-nhap" ng-model="vm.hoSo.email" required placeholder="example@gmail.com" style="padding-left: 36px;" />
+                      <i class="bi bi-envelope" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--xam-400);"></i>
+                    </div>
+                  </div>
+
+                  <!-- Số điện thoại -->
+                  <div class="nhom-bieu-mau">
+                    <label class="nhan-bieu-mau">Số điện thoại <span class="dau-sao">*</span></label>
+                    <div style="position: relative;">
+                      <input type="tel" class="o-nhap" ng-model="vm.hoSo.soDienThoai" required placeholder="0901234567" style="padding-left: 36px;" />
+                      <i class="bi bi-telephone" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--xam-400);"></i>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Ngày sinh (Độc giả hoặc có trường ngày sinh) -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;" ng-if="vm.vaiTro === 'DocGia' || vm.hoSo.maDocGia">
+                  <div class="nhom-bieu-mau">
+                    <label class="nhan-bieu-mau">Ngày sinh</label>
+                    <div style="position: relative;">
+                      <input type="date" class="o-nhap" ng-model="vm.hoSo.ngaySinh" style="padding-left: 36px;" />
+                      <i class="bi bi-calendar-date" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--xam-400);"></i>
+                    </div>
+                  </div>
+
+                  <div class="nhom-bieu-mau">
+                    <label class="nhan-bieu-mau">Mã độc giả hệ thống</label>
+                    <div style="position: relative;">
+                      <input type="text" class="o-nhap" value="#{{ vm.hoSo.maDocGia }}" readonly style="background-color: var(--xam-100); color: var(--xam-600); cursor: not-allowed; padding-left: 36px;" />
+                      <i class="bi bi-tag" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--xam-400);"></i>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Địa chỉ giao báo -->
+                <div class="nhom-bieu-mau" style="margin-top: 1rem;" ng-if="vm.vaiTro === 'DocGia' || vm.hoSo.maDocGia">
+                  <label class="nhan-bieu-mau">Địa chỉ giao nhận báo tận nơi <span class="dau-sao">*</span></label>
+                  <div style="position: relative;">
+                    <textarea class="o-nhap" ng-model="vm.hoSo.diaChi" rows="3" placeholder="Số nhà, ngõ/ngách, tên đường, phường/xã, quận/huyện, tỉnh/thành phố" style="padding-left: 36px;"></textarea>
+                    <i class="bi bi-geo-alt" style="position: absolute; left: 12px; top: 18px; color: var(--xam-400);"></i>
+                  </div>
+                  <small style="color: var(--xam-500); font-size: 0.8rem; margin-top: 4px; display: block;">
+                    Địa chỉ này sẽ tự động áp dụng cho các đơn đặt báo định kỳ và bưu cục phát hành giao báo.
+                  </small>
+                </div>
+
+                <!-- Nút thao tác -->
+                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 1.75rem; border-top: 1px solid var(--xam-200); padding-top: 1.25rem;">
+                  <button type="button" class="nut nut-phu" ng-click="vm.datLai()" ng-disabled="vm.dangLuu">
+                    <i class="bi bi-arrow-counterclockwise"></i> Hoàn Tác
+                  </button>
+                  <button type="submit" class="nut nut-chinh" ng-disabled="vm.dangLuu">
+                    <span ng-if="!vm.dangLuu"><i class="bi bi-check-circle"></i> Lưu Thay Đổi Thông Tin</span>
+                    <span ng-if="vm.dangLuu"><i class="bi bi-arrow-repeat quay-vong"></i> Đang cập nhật...</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Tab 2: Đổi Mật Khẩu Tài Khoản -->
+            <div ng-show="vm.tabHienTai === 'mat-khau'" style="padding: 1.75rem;">
+              <div style="margin-bottom: 1.25rem;">
+                <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--xam-900); margin: 0 0 4px 0;">
+                  Đổi Mật Khẩu Tài Khoản
+                </h3>
+                <p style="color: var(--xam-500); font-size: 0.85rem; margin: 0;">
+                  Vui lòng nhập mật khẩu hiện tại và mật khẩu mới để tăng cường tính bảo mật cho tài khoản của bạn.
+                </p>
+              </div>
+
+              <!-- Thông báo kết quả đổi MK -->
+              <div ng-if="vm.thongBaoMk" class="thong-bao" ng-class="{'thong-bao-thanh-cong': vm.thanhCongMk, 'thong-bao-loi': !vm.thanhCongMk}" style="margin-bottom: 1.25rem;">
+                <i class="bi" ng-class="vm.thanhCongMk ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'"></i>
+                {{ vm.thongBaoMk }}
+              </div>
+
+              <form ng-submit="vm.xuLyDoiMatKhau()" novalidate style="max-width: 520px;">
+                <div class="nhom-bieu-mau">
+                  <label class="nhan-bieu-mau">Mật khẩu hiện tại <span class="dau-sao">*</span></label>
+                  <div style="position: relative;">
+                    <input type="{{ vm.hienMkCu ? 'text' : 'password' }}" class="o-nhap" ng-model="vm.doiMk.matKhauCu" required placeholder="Nhập mật khẩu hiện tại" style="padding-left: 36px; padding-right: 40px;" />
+                    <i class="bi bi-key" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--xam-400);"></i>
+                    <button type="button" ng-click="vm.hienMkCu = !vm.hienMkCu" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--xam-500);">
+                      <i class="bi" ng-class="vm.hienMkCu ? 'bi-eye-slash' : 'bi-eye'"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="nhom-bieu-mau" style="margin-top: 1rem;">
+                  <label class="nhan-bieu-mau">Mật khẩu mới <span class="dau-sao">*</span></label>
+                  <div style="position: relative;">
+                    <input type="{{ vm.hienMkMoi ? 'text' : 'password' }}" class="o-nhap" ng-model="vm.doiMk.matKhauMoi" required placeholder="Tối thiểu 6 ký tự" style="padding-left: 36px; padding-right: 40px;" />
+                    <i class="bi bi-shield-lock" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--xam-400);"></i>
+                    <button type="button" ng-click="vm.hienMkMoi = !vm.hienMkMoi" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--xam-500);">
+                      <i class="bi" ng-class="vm.hienMkMoi ? 'bi-eye-slash' : 'bi-eye'"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="nhom-bieu-mau" style="margin-top: 1rem;">
+                  <label class="nhan-bieu-mau">Xác nhận mật khẩu mới <span class="dau-sao">*</span></label>
+                  <div style="position: relative;">
+                    <input type="{{ vm.hienMkMoi ? 'text' : 'password' }}" class="o-nhap" ng-model="vm.doiMk.xacNhanMatKhau" required placeholder="Nhập lại mật khẩu mới" style="padding-left: 36px;" />
+                    <i class="bi bi-shield-check" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--xam-400);"></i>
+                  </div>
+                </div>
+
+                <!-- Nút thao tác đổi MK -->
+                <div style="margin-top: 1.75rem; border-top: 1px solid var(--xam-200); padding-top: 1.25rem;">
+                  <button type="submit" class="nut nut-chinh" ng-disabled="vm.dangDoiMk">
+                    <span ng-if="!vm.dangDoiMk"><i class="bi bi-shield-check"></i> Xác Nhận Đổi Mật Khẩu</span>
+                    <span ng-if="vm.dangDoiMk"><i class="bi bi-arrow-repeat quay-vong"></i> Đang xử lý...</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+
+          </div>
+
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Nạp scripts -->
+  <script src="../angular.min.js"></script>
+  <script src="../js/cau-hinh.js"></script>
+  <script src="../js/angular-app.js"></script>
+  <script src="../js/xac-thuc.js"></script>
+  <script src="../js/tien-ich.js"></script>
+  <script src="../js/goi-api.js"></script>
+  <script src="../js/dieu-huong.js"></script>
+
+  <script>
+    angular.module('qlbcApp')
+      .controller('ThongTinCaNhanController', ['GoiApiService', '$timeout', function(GoiApiService, $timeout) {
+        var vm = this;
+        
+        // 1. Kiểm tra xác thực
+        vm.nguoiDung = XacThuc.kiemTraQuyen([]);
+        if (!vm.nguoiDung) return;
+
+        vm.vaiTro = vm.nguoiDung.vaiTro || vm.nguoiDung.quyenHan || vm.nguoiDung.role || 'DocGia';
+        if (vm.vaiTro === 'Biên tập viên' || vm.vaiTro === 'bientap') vm.vaiTro = 'BienTapVien';
+        else if (vm.vaiTro === 'Độc giả' || vm.vaiTro === 'docgia') vm.vaiTro = 'DocGia';
+        else if (typeof vm.vaiTro === 'number') vm.vaiTro = QUYEN_ROLE[vm.vaiTro] || 'DocGia';
+
+        vm.tenVaiTro = TEN_VAI_TRO[vm.vaiTro] || vm.vaiTro;
+        vm.mauBadge = MAU_BADGE_VAI_TRO[vm.vaiTro] || 'badge-lam';
+
+        vm.tabHienTai = 'thong-tin';
+        // Khởi tạo ngay từ session hiện tại để hiển thị 0ms không độ trễ
+        vm.hoSo = angular.copy(vm.nguoiDung) || {};
+        vm.hoSoGoc = angular.copy(vm.hoSo);
+        vm.dangLuu = false;
+        vm.thongBao = '';
+        vm.thanhCong = false;
+
+        // Đổi mật khẩu state
+        vm.doiMk = {
+          matKhauCu: '',
+          matKhauMoi: '',
+          xacNhanMatKhau: ''
+        };
+        vm.dangDoiMk = false;
+        vm.thongBaoMk = '';
+        vm.thanhCongMk = false;
+
+        // 2. Tải thông tin cá nhân
+        vm.taiThongTin = function() {
+          vm.thongBao = '';
+          var maDocGia = vm.nguoiDung.maDocGia;
+          var maNguoiDung = vm.nguoiDung.maNguoiDung;
+
+          if (maDocGia) {
+            // Lấy từ CaNhan
+            GoiApiService.layThongTinCaNhan(maDocGia).then(function(res) {
+              var data = res.data;
+              if (data && data.data) data = data.data;
+              vm.ganHoSo(data);
+            }).catch(function(err) {
+              console.warn('Lỗi tải hồ sơ cá nhân:', err);
+              // Fallback qua TaiKhoan
+              vm.taiQuaTaiKhoan(maNguoiDung);
+            });
+          } else {
+            vm.taiQuaTaiKhoan(maNguoiDung);
+          }
+        };
+
+        vm.taiQuaTaiKhoan = function(maNguoiDung) {
+          if (!maNguoiDung) return;
+          GoiApiService.layThongTinNguoiDung(maNguoiDung).then(function(res) {
+            var data = res.data;
+            if (data && data.data) data = data.data;
+            vm.ganHoSo(data);
+          }).catch(function(err) {
+            console.error('Không thể tải thông tin người dùng:', err);
+            vm.hoSo = angular.copy(vm.nguoiDung);
+          });
+        };
+
+        vm.ganHoSo = function(data) {
+          if (!data) return;
+          vm.hoSo = {
+            maNguoiDung: data.maNguoiDung || vm.nguoiDung.maNguoiDung,
+            maDocGia: data.maDocGia || vm.nguoiDung.maDocGia,
+            tenDangNhap: data.tenDangNhap || vm.nguoiDung.tenDangNhap,
+            hoTen: data.hoTen || vm.nguoiDung.hoTen,
+            email: data.email || vm.nguoiDung.email,
+            soDienThoai: data.soDienThoai || vm.nguoiDung.soDienThoai || '',
+            diaChi: data.diaChi || '',
+            ngaySinh: data.ngaySinh ? TienIch.chuyenDoiNgayInput(data.ngaySinh) : null
+          };
+          vm.hoSoGoc = angular.copy(vm.hoSo);
+        };
+
+        vm.datLai = function() {
+          vm.hoSo = angular.copy(vm.hoSoGoc);
+          vm.thongBao = '';
+        };
+
+        // 3. Lưu thông tin cá nhân
+        vm.luuThongTin = function() {
+          if (!vm.hoSo.hoTen || !vm.hoSo.email || !vm.hoSo.soDienThoai) {
+            vm.thongBao = 'Vui lòng nhập đầy đủ họ tên, email và số điện thoại!';
+            vm.thanhCong = false;
+            return;
+          }
+
+          if (/\d/.test(vm.hoSo.hoTen)) {
+            vm.thongBao = 'Họ và tên không được chứa chữ số!';
+            vm.thanhCong = false;
+            return;
+          }
+          if (/[!@#$%^&*()_+=\[\]{};':"\\|,.<>\/?~`]/.test(vm.hoSo.hoTen)) {
+            vm.thongBao = 'Họ và tên không được chứa ký tự đặc biệt!';
+            vm.thanhCong = false;
+            return;
+          }
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(vm.hoSo.email.trim())) {
+            vm.thongBao = 'Email không hợp lệ. Vui lòng nhập đúng định dạng (VD: docgia@gmail.com)!';
+            vm.thanhCong = false;
+            return;
+          }
+          if (/[a-zA-Z]/.test(vm.hoSo.soDienThoai)) {
+            vm.thongBao = 'Số điện thoại không được chứa chữ cái, chỉ được nhập số!';
+            vm.thanhCong = false;
+            return;
+          }
+          if (!/^0[0-9]{9,10}$/.test(vm.hoSo.soDienThoai.trim())) {
+            vm.thongBao = 'Số điện thoại phải gồm 10 chữ số và bắt đầu bằng số 0 (VD: 0912345678)!';
+            vm.thanhCong = false;
+            return;
+          }
+
+          vm.dangLuu = true;
+          vm.thongBao = '';
+
+          var payload = {
+            hoTen: vm.hoSo.hoTen,
+            email: vm.hoSo.email,
+            soDienThoai: vm.hoSo.soDienThoai,
+            ngaySinh: vm.hoSo.ngaySinh ? TienIch.dinhDangNgayISO(vm.hoSo.ngaySinh) : null,
+            diaChi: vm.hoSo.diaChi
+          };
+
+          var promise;
+          if (vm.hoSo.maDocGia) {
+            promise = GoiApiService.capNhatThongTinCaNhan(payload, vm.hoSo.maDocGia);
+          } else if (vm.vaiTro === 'Admin') {
+            promise = GoiApiService.capNhatNguoiDung({
+              maNguoiDung: vm.hoSo.maNguoiDung,
+              tenDangNhap: vm.hoSo.tenDangNhap,
+              hoTen: vm.hoSo.hoTen,
+              email: vm.hoSo.email,
+              soDienThoai: vm.hoSo.soDienThoai,
+              quyenHan: 'Admin',
+              trangThai: true
+            });
+          } else {
+            promise = GoiApiService.capNhatThongTinCaNhan(payload);
+          }
+
+          promise.then(function(res) {
+            vm.dangLuu = false;
+            vm.thanhCong = true;
+            vm.thongBao = 'Cập nhật thông tin cá nhân thành công!';
+            vm.hoSoGoc = angular.copy(vm.hoSo);
+
+            // Cập nhật session storage
+            var cur = XacThuc.layNguoiDung();
+            if (cur) {
+              cur.hoTen = vm.hoSo.hoTen;
+              cur.email = vm.hoSo.email;
+              cur.soDienThoai = vm.hoSo.soDienThoai;
+              XacThuc.luuPhien(cur, null);
+              DieuHuong.khoiTao();
+            }
+          }).catch(function(err) {
+            vm.dangLuu = false;
+            vm.thanhCong = false;
+            var msg = (err.data && err.data.message) ? err.data.message : 'Cập nhật thất bại. Vui lòng thử lại!';
+            vm.thongBao = msg;
+          });
+        };
+
+        // 4. Xử lý Đổi Mật Khẩu
+        vm.xuLyDoiMatKhau = function() {
+          if (!vm.doiMk.matKhauCu || !vm.doiMk.matKhauMoi || !vm.doiMk.xacNhanMatKhau) {
+            vm.thongBaoMk = 'Vui lòng nhập đầy đủ các trường mật khẩu!';
+            vm.thanhCongMk = false;
+            return;
+          }
+
+          if (vm.doiMk.matKhauMoi.length < 6) {
+            vm.thongBaoMk = 'Mật khẩu mới phải có tối thiểu 6 ký tự!';
+            vm.thanhCongMk = false;
+            return;
+          }
+
+          if (vm.doiMk.matKhauMoi !== vm.doiMk.xacNhanMatKhau) {
+            vm.thongBaoMk = 'Xác nhận mật khẩu mới không khớp!';
+            vm.thanhCongMk = false;
+            return;
+          }
+
+          if (vm.doiMk.matKhauMoi === vm.doiMk.matKhauCu) {
+            vm.thongBaoMk = 'Mật khẩu mới không được trùng với mật khẩu cũ!';
+            vm.thanhCongMk = false;
+            return;
+          }
+
+          vm.dangDoiMk = true;
+          vm.thongBaoMk = '';
+
+          GoiApiService.doiMatKhau({
+            maNguoiDung: vm.hoSo.maNguoiDung || vm.nguoiDung.maNguoiDung,
+            matKhauCu: vm.doiMk.matKhauCu,
+            matKhauMoi: vm.doiMk.matKhauMoi
+          }).then(function(res) {
+            vm.dangDoiMk = false;
+            vm.thanhCongMk = true;
+            vm.thongBaoMk = 'Đổi mật khẩu thành công! Mật khẩu mới đã được lưu.';
+            vm.doiMk = { matKhauCu: '', matKhauMoi: '', xacNhanMatKhau: '' };
+          }).catch(function(err) {
+            vm.dangDoiMk = false;
+            vm.thanhCongMk = false;
+            var msg = (err.data && err.data.message) ? err.data.message : 'Đổi mật khẩu thất bại. Mật khẩu cũ có thể không đúng!';
+            vm.thongBaoMk = msg;
+          });
+        };
+
+        // Khởi động
+        vm.taiThongTin();
+      }]);
+  </script>
+</body>
+</html>

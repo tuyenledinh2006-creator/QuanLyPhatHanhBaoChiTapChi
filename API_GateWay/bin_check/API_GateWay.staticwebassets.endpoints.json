@@ -1,0 +1,88 @@
+{
+  "Version": 1,
+  "ManifestType": "Build",
+  "Endpoints": [
+    {
+      "Route": ".gitkeep",
+      "AssetFile": ".gitkeep",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "61"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/octet-stream"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"f5jTgoPlBVZlIylN5h5eN9ZpRu3jr3t0zgRmv+dG/Do=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 07 Nov 2026 06:49:36 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-f5jTgoPlBVZlIylN5h5eN9ZpRu3jr3t0zgRmv+dG/Do="
+        }
+      ]
+    },
+    {
+      "Route": ".znaa8vytwq.gitkeep",
+      "AssetFile": ".gitkeep",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "61"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/octet-stream"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"f5jTgoPlBVZlIylN5h5eN9ZpRu3jr3t0zgRmv+dG/Do=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 07 Nov 2026 06:49:36 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "znaa8vytwq"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-f5jTgoPlBVZlIylN5h5eN9ZpRu3jr3t0zgRmv+dG/Do="
+        },
+        {
+          "Name": "label",
+          "Value": ".gitkeep"
+        }
+      ]
+    }
+  ]
+}

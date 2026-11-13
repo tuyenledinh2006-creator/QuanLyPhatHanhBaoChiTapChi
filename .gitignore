@@ -1,0 +1,27 @@
+# Visual Studio & IDE
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build outputs
+**/bin/
+**/obj/
+**/publish/
+
+# Environment files & Secrets
+.env
+.env.*
+!.env.example
+*.pfx
+*.key
+
+# Logs
+*.log
+logs/
+
+# SQL Server local artifacts
+*.mdf
+*.ldf

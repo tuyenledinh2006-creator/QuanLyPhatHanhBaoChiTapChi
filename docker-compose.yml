@@ -1,0 +1,175 @@
+# ========================================================
+# HỆ THỐNG QUẢN LÝ PHÁT HÀNH BÁO CHÍ (MICROSERVICES / SOA)
+# DOCKER COMPOSE QUẢN LÝ ĐA CONTAINER THEO GIÁO TRÌNH MỤC 6.5.2
+# ========================================================
+
+services:
+  # ------------------------------------------------------
+  # 1. API GATEWAY (Cổng truy cập tập trung duy nhất ra ngoài máy Host)
+  # ------------------------------------------------------
+  api-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: gateway
+    container_name: qlbc-api-gateway
+    restart: unless-stopped
+    ports:
+      # Cổng 4 chữ số 5000 (theo đúng mục 6.5.2 giáo trình), cùng cổng 80, 8080 và 5103
+      - "5000:8080"
+      - "80:8080"
+      - "${GATEWAY_PORT:-8080}:8080"
+      - "5103:8080"
+    volumes:
+      # Phục vụ giao diện Frontend trực tiếp từ Gateway
+      - ./frontend:/frontend:ro
+      - qlbc-uploads:/app/wwwroot/uploads
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+      - ASPNETCORE_HTTP_PORTS=8080
+      - Jwt__Key=${JWT_KEY:-QuanLyPhatHanhBaoChi_SecretKey_2026_Secure_JWT_Key_Antigravity!}
+      - Jwt__Issuer=${JWT_ISSUER:-QuanLyPhatHanhBaoChi_API}
+      - Jwt__Audience=${JWT_AUDIENCE:-QuanLyPhatHanhBaoChi_Client}
+    depends_on:
+      - api-login
+      - api-admin
+      - api-bientap
+      - api-docgia
+    networks:
+      - qlbc-network
+
+  # ------------------------------------------------------
+  # 2. DỊCH VỤ XÁC THỰC & ĐĂNG NHẬP (Nội bộ)
+  # ------------------------------------------------------
+  api-login:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: login
+    container_name: qlbc-api-login
+    restart: unless-stopped
+    expose:
+      # Chỉ mở cổng trong mạng nội bộ Docker, không mở ra máy host
+      - "8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ConnectionStrings__DefaultConnection=${DEFAULT_CONNECTION}
+      - Jwt__Key=${JWT_KEY:-QuanLyPhatHanhBaoChi_SecretKey_2026_Secure_JWT_Key_Antigravity!}
+      - Jwt__Issuer=${JWT_ISSUER:-QuanLyPhatHanhBaoChi_API}
+      - Jwt__Audience=${JWT_AUDIENCE:-QuanLyPhatHanhBaoChi_Client}
+      - Jwt__AccessTokenExpirationMinutes=${JWT_EXPIRE_MINUTES:-60}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - qlbc-network
+
+  # ------------------------------------------------------
+  # 3. DỊCH VỤ QUẢN TRỊ VIÊN (Nội bộ)
+  # ------------------------------------------------------
+  api-admin:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: admin
+    container_name: qlbc-api-admin
+    restart: unless-stopped
+    expose:
+      - "8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ConnectionStrings__DefaultConnection=${DEFAULT_CONNECTION}
+      - Jwt__Key=${JWT_KEY:-QuanLyPhatHanhBaoChi_SecretKey_2026_Secure_JWT_Key_Antigravity!}
+      - Jwt__Issuer=${JWT_ISSUER:-QuanLyPhatHanhBaoChi_API}
+      - Jwt__Audience=${JWT_AUDIENCE:-QuanLyPhatHanhBaoChi_Client}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - qlbc-network
+
+  # ------------------------------------------------------
+  # 4. DỊCH VỤ BIÊN TẬP VIÊN (Nội bộ - Có volume bền vững lưu ảnh/ấn phẩm)
+  # ------------------------------------------------------
+  api-bientap:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: bientap
+    container_name: qlbc-api-bientap
+    restart: unless-stopped
+    expose:
+      - "8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ConnectionStrings__DefaultConnection=${DEFAULT_CONNECTION}
+      - Jwt__Key=${JWT_KEY:-QuanLyPhatHanhBaoChi_SecretKey_2026_Secure_JWT_Key_Antigravity!}
+      - Jwt__Issuer=${JWT_ISSUER:-QuanLyPhatHanhBaoChi_API}
+      - Jwt__Audience=${JWT_AUDIENCE:-QuanLyPhatHanhBaoChi_Client}
+    volumes:
+      # Volume bền vững lưu trữ ảnh bìa báo / file tải lên
+      - qlbc-uploads:/app/wwwroot/uploads
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - qlbc-network
+
+  # ------------------------------------------------------
+  # 5. DỊCH VỤ ĐỘC GIẢ (Nội bộ)
+  # ------------------------------------------------------
+  api-docgia:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: docgia
+    container_name: qlbc-api-docgia
+    restart: unless-stopped
+    expose:
+      - "8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ConnectionStrings__DefaultConnection=${DEFAULT_CONNECTION}
+      - Jwt__Key=${JWT_KEY:-QuanLyPhatHanhBaoChi_SecretKey_2026_Secure_JWT_Key_Antigravity!}
+      - Jwt__Issuer=${JWT_ISSUER:-QuanLyPhatHanhBaoChi_API}
+      - Jwt__Audience=${JWT_AUDIENCE:-QuanLyPhatHanhBaoChi_Client}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - qlbc-network
+
+  # ------------------------------------------------------
+  # 6. DỊCH VỤ FRONTEND NGINX (TÙY CHỌN - CHỈ CHẠY KHI CÓ PROFILE)
+  # Khi chạy lệnh bình thường "docker compose up -d" service này KHÔNG chạy,
+  # để giữ nguyên cách chạy frontend bằng trình duyệt hoặc Live Server như hiện tại.
+  # Nếu muốn chạy frontend trong container, dùng: docker compose --profile with-frontend up -d
+  # ------------------------------------------------------
+  frontend:
+    image: nginx:alpine
+    container_name: qlbc-frontend
+    restart: unless-stopped
+    profiles:
+      - with-frontend
+    ports:
+      - "3000:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+    depends_on:
+      - api-gateway
+    networks:
+      - qlbc-network
+
+# ========================================================
+# MẠNG DOCKER DÙNG CHUNG ĐỂ CÁC SERVICE GIAO TIẾP VỚI NHAU
+# ========================================================
+networks:
+  qlbc-network:
+    driver: bridge
+
+# ========================================================
+# VOLUME BỀN VỮNG LƯU TRỮ DỮ LIỆU FILE / ẢNH TẢI LÊN
+# ========================================================
+volumes:
+  qlbc-uploads:
+    driver: local

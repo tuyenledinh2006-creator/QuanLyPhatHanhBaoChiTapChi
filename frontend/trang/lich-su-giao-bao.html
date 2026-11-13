@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="vi" ng-app="qlbcApp">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lịch Sử Giao Báo - Quản lý Báo chí</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%232563eb'><path d='M2 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H2zm12-1a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h12z'/></svg>" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="../css/chung.css" />
+  <link rel="stylesheet" href="../css/bo-cuc.css" />
+  <link rel="stylesheet" href="../css/thanh-phan.css" />
+  <style>[ng-cloak] { display: none !important; }</style>
+</head>
+<body ng-cloak ng-controller="LichSuController as vm">
+  <div id="ung-dung">
+    <div id="overlay-sidebar"></div>
+
+    <aside id="sidebar" aria-label="Thanh bên điều hướng">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-icon"><i class="bi bi-newspaper"></i></div>
+        <div class="sidebar-logo-ten">Quản Lý Báo Chí</div>
+        <button id="nut-thu-gon-sidebar" type="button" class="nut nut-vien nut-nho" title="Thu gọn / Mở rộng">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+      </div>
+      <nav class="sidebar-noi-dung" aria-label="Menu điều hướng chính"></nav>
+      <div class="sidebar-footer"></div>
+    </aside>
+
+    <div id="vung-chinh">
+      <header id="header" style="justify-content: space-between;">
+        <h1 style="font-size: 1.25rem; font-weight: 700; color: var(--xam-900); margin: 0;">
+          <i class="bi bi-box-seam text-primary"></i> Lịch Sử Giao Nhận Báo Định Kỳ
+        </h1>
+        <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+          <button ng-if="vm.vaiTro !== 'DocGia'" class="nut nut-phu nut-nho" ng-click="vm.xuatExcel()" title="Xuất file Excel (.xls)">
+            <i class="bi bi-file-earmark-excel text-success"></i> Xuất Excel
+          </button>
+          <button class="nut nut-phu nut-nho" ng-click="vm.taiLichSu()">
+            <i class="bi bi-arrow-clockwise"></i> Làm Mới
+          </button>
+        </div>
+      </header>
+
+      <main class="vung-lam-viec" style="padding: 1.5rem;">
+        <div class="the" style="padding: 1.5rem;">
+          <p style="color: var(--xam-600); margin-top: 0; margin-bottom: 1.25rem; font-size: 0.95rem;">
+            Theo dõi hành trình phát hành và giao báo tận nơi theo từng kỳ báo thuộc các gói thuê bao của bạn.
+          </p>
+
+          <div class="bang-cuon" style="overflow-x: auto;">
+            <table class="bang">
+              <thead>
+                <tr>
+                  <th>Mã Lệnh</th>
+                  <th>Ấn Phẩm & Kỳ Báo</th>
+                  <th>Ngày Phát Hành</th>
+                  <th>Số Lượng</th>
+                  <th>Địa Chỉ Nhận Báo</th>
+                  <th>Hình Thức</th>
+                  <th>Trạng Thái Giao Hàng</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr ng-repeat="ls in vm.danhSach">
+                  <td><strong>#{{ ls.maPhatHanh }}</strong></td>
+                  <td style="font-weight: 600; color: var(--mau-chinh);">
+                    {{ ls.tenAnPham || 'Báo ngày' }} - {{ ls.tenSoBao || ('Kỳ số #' + (ls.soThuTuBao || ls.maSoBao)) }}
+                  </td>
+                  <td>{{ ls.ngayPhatHanh | dinhDangNgay }}</td>
+                  <td>{{ ls.soLuong || 1 }} bản</td>
+                  <td><i class="bi bi-geo-alt text-danger"></i> {{ ls.diaChiGiao || 'Địa chỉ đăng ký thuê bao' }}</td>
+                  <td><span class="badge badge-xam">{{ ls.hinhThuc || 'Giao báo' }}</span></td>
+                  <td>
+                    <span class="badge" ng-class="{
+                      'badge-xanh': ls.trangThai === 'Đã giao',
+                      'badge-lam': ls.trangThai === 'Đang giao',
+                      'badge-tim': ls.trangThai === 'Đã xác nhận',
+                      'badge-vang': ls.trangThai === 'Chờ xử lý'
+                    }">{{ ls.trangThai }}</span>
+                  </td>
+                </tr>
+                <tr ng-if="!vm.danhSach.length">
+                  <td colspan="7" style="text-align: center; color: var(--xam-500); padding: 2rem;">
+                    Bạn chưa có lượt giao nhận báo nào trong hệ thống.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script src="../angular.min.js"></script>
+  <script src="../js/cau-hinh.js"></script>
+  <script src="../js/angular-app.js"></script>
+  <script src="../js/xac-thuc.js"></script>
+  <script src="../js/tien-ich.js"></script>
+  <script src="../js/goi-api.js"></script>
+  <script src="../js/dieu-huong.js"></script>
+  <script>
+    angular.module('qlbcApp')
+      .controller('LichSuController', ['GoiApiService', function(GoiApiService) {
+        var vm = this;
+        vm.user = XacThuc.kiemTraQuyen(['DocGia', 'Admin']);
+        if (!vm.user) return;
+
+        vm.vaiTro = vm.user.vaiTro || vm.user.quyenHan || vm.user.role || 'DocGia';
+        if (typeof vm.vaiTro === 'number') vm.vaiTro = QUYEN_ROLE[vm.vaiTro] || 'DocGia';
+
+        vm.danhSach = [];
+
+        vm.taiLichSu = function() {
+          var maDocGia = vm.user.maDocGia || vm.user.maNguoiDung;
+          GoiApiService.layLichSuNhanBao(maDocGia).then(function(res) {
+            var raw = Array.isArray(res.data) ? res.data : [];
+            vm.danhSach = raw.filter(function(item) {
+              return (!item.trangThaiHoaDon || item.trangThaiHoaDon === 'Đã thanh toán') &&
+                     (!item.trangThaiDangKy || item.trangThaiDangKy !== 'Chờ thanh toán');
+            });
+          }).catch(function(err) {
+            console.warn('Lỗi tải lịch sử nhận báo', err);
+          });
+        };
+
+        // Xuất Excel
+        vm.xuatExcel = function() {
+          if (!vm.danhSach || !vm.danhSach.length) {
+            TienIch.thongBao('Không có dữ liệu lịch sử giao báo để xuất Excel!', 'canh-bao');
+            return;
+          }
+          var cot = [
+            { field: 'maPhatHanh', title: 'Mã Phát Hành' },
+            { field: 'tenAnPham', title: 'Ấn Phẩm' },
+            { field: 'soThuTu', title: 'Kỳ Báo' },
+            { field: 'ngayGiao', title: 'Ngày Giao' },
+            { field: 'nguoiGiao', title: 'Người Giao' },
+            { field: 'trangThai', title: 'Trạng Thái' }
+          ];
+          TienIch.xuatExcel(vm.danhSach, cot, 'LichSuGiaoBao_' + new Date().toISOString().slice(0, 10));
+        };
+
+        vm.taiLichSu();
+      }]);
+  </script>
+</body>
+</html>

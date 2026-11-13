@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="vi" ng-app="qlbcApp">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nhật Ký & Lịch Sử Phiên Bản (Audit Log) - Quản lý Báo chí</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%232563eb'><path d='M2 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H2zm12-1a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h12z'/></svg>" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="../css/chung.css" />
+  <link rel="stylesheet" href="../css/bo-cuc.css" />
+  <link rel="stylesheet" href="../css/thanh-phan.css" />
+  <link rel="stylesheet" href="../css/bieu-mau.css" />
+  <style>[ng-cloak] { display: none !important; }</style>
+</head>
+<body ng-cloak ng-controller="AuditLogController as vm">
+  <div id="ung-dung">
+    <div id="overlay-sidebar"></div>
+
+    <aside id="sidebar" aria-label="Thanh bên điều hướng">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-icon"><i class="bi bi-newspaper"></i></div>
+        <div class="sidebar-logo-ten">Quản Lý Báo Chí</div>
+        <button id="nut-thu-gon-sidebar" type="button" class="nut nut-vien nut-nho" title="Thu gọn / Mở rộng">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+      </div>
+      <nav class="sidebar-noi-dung" aria-label="Menu điều hướng chính"></nav>
+      <div class="sidebar-footer"></div>
+    </aside>
+
+    <div id="vung-chinh">
+      <header id="header" style="justify-content: space-between; gap: 1rem;">
+        <h1 style="font-size: 1.25rem; font-weight: 700; color: var(--xam-900); margin: 0; white-space: nowrap;">
+          <i class="bi bi-clock-history text-primary"></i> Nhật Ký Hệ Thống & Lịch Sử Phiên Bản (Audit Log)
+        </h1>
+        <div style="display: flex; gap: 0.75rem; flex-shrink: 0;">
+          <button class="nut nut-phu nut-nho" ng-click="vm.xuatExcel()" title="Xuất file Excel (.xls) có định dạng màu và chia cột chuẩn">
+            <i class="bi bi-file-earmark-excel text-success"></i> Xuất Excel
+          </button>
+          <button class="nut nut-chinh nut-nho" ng-click="vm.lamMoi()" title="Làm mới & tải lại toàn bộ"><i class="bi bi-arrow-clockwise"></i> Làm Mới</button>
+        </div>
+      </header>
+
+      <main class="vung-lam-viec" style="padding: 1.5rem;">
+        <!-- Bộ lọc & Tìm kiếm -->
+        <div class="the" style="padding: 1.25rem; margin-bottom: 1.5rem;">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; align-items: flex-end;">
+            <div>
+              <label style="font-size: 0.825rem; font-weight: 600; color: var(--xam-600); margin-bottom: 4px; display: block;">Tìm kiếm từ khóa:</label>
+              <input type="text" class="o-nhap" placeholder="Tìm theo tên đăng nhập, mô tả, ID..." ng-model="vm.tuKhoa" />
+            </div>
+            <div>
+              <label style="font-size: 0.825rem; font-weight: 600; color: var(--xam-600); margin-bottom: 4px; display: block;">Lọc theo bảng dữ liệu:</label>
+              <select class="o-chon" ng-model="vm.boLocBang" ng-change="vm.taiDuLieu()">
+                <option value="">-- Tất cả các bảng --</option>
+                <option value="DocGia">Thông tin độc giả</option>
+                <option value="DangKy">Đăng ký phát hành</option>
+                <option value="PhatHanh">Kế hoạch phát hành</option>
+                <option value="HoaDon">Hóa đơn</option>
+                <option value="ThanhToan">Thanh toán</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size: 0.825rem; font-weight: 600; color: var(--xam-600); margin-bottom: 4px; display: block;">Lọc theo hành động:</label>
+              <select class="o-chon" ng-model="vm.boLocHanhDong" ng-change="vm.taiDuLieu()">
+                <option value="">-- Tất cả hành động --</option>
+                <option value="Create">Thêm mới</option>
+                <option value="Update">Cập nhật</option>
+                <option value="SoftDelete">Xóa</option>
+                <option value="Restore">Khôi phục</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size: 0.825rem; font-weight: 600; color: var(--xam-600); margin-bottom: 4px; display: block;">Số lượng bản ghi:</label>
+              <select class="o-chon" ng-model="vm.gioiHan" ng-change="vm.taiDuLieu()">
+                <option value="50">50 bản ghi gần nhất</option>
+                <option value="100">100 bản ghi</option>
+                <option value="200">200 bản ghi</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size: 0.825rem; font-weight: 600; color: var(--xam-600); margin-bottom: 4px; display: block;">Thao tác:</label>
+              <button type="button" class="nut nut-phu" style="width: 100%;" ng-click="vm.lamMoi()" title="Xóa tìm kiếm & làm mới">
+                <i class="bi bi-arrow-clockwise"></i> Làm Mới
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bảng danh sách nhật ký -->
+        <div class="the" style="padding: 1.5rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <div style="font-weight: 700; color: var(--xam-800);">
+              Tổng số sự kiện ghi nhận: <span class="badge badge-lam">{{ (vm.danhSach | filter:vm.tuKhoa).length }}</span>
+            </div>
+          </div>
+
+          <div class="bang-cuon" style="overflow-x: auto;">
+            <table class="bang">
+              <thead>
+                <tr>
+                  <th style="width: 60px;">ID</th>
+                  <th style="width: 150px;">Thời Gian</th>
+                  <th style="width: 140px;">Người Thực Hiện</th>
+                  <th style="width: 120px;">Hành Động</th>
+                  <th style="width: 120px;">Bảng Dữ Liệu</th>
+                  <th style="width: 90px;">Mã Bản Ghi</th>
+                  <th>Mô Tả Chi Tiết</th>
+                  <th style="width: 130px; text-align: center;">Thao Tác</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr ng-repeat="log in vm.danhSach | filter:vm.tuKhoa | limitTo:vm.kichThuocTrang:(vm.trangHienTai - 1)*vm.kichThuocTrang">
+                  <td><strong>#{{ log.id }}</strong></td>
+                  <td style="white-space: nowrap;">{{ log.thoiGian | date:'yyyy-MM-dd' }}</td>
+                  <td>
+                    <span style="font-weight: 600; color: var(--xam-800);"><i class="bi bi-person"></i> {{ log.tenDangNhap || ('ID ' + log.userId) }}</span>
+                  </td>
+                  <td>
+                    <span class="badge" ng-class="{
+                      'badge-xanh': log.hanhDong === 'Create' || log.hanhDong === 'Thêm mới',
+                      'badge-lam': log.hanhDong === 'Update' || log.hanhDong === 'Cập nhật',
+                      'badge-do': log.hanhDong === 'SoftDelete' || log.hanhDong === 'Xóa' || log.hanhDong === 'Xóa mềm',
+                      'badge-tim': log.hanhDong === 'Restore' || log.hanhDong === 'Khôi phục'
+                    }">
+                      {{ vm.tenHanhDong(log.hanhDong) }}
+                    </span>
+                  </td>
+                  <td><span class="badge badge-vien" style="font-size: 0.8rem; font-family: inherit;">{{ vm.tenBang(log.bang) }}</span></td>
+                  <td><strong>{{ log.khoaChinh }}</strong></td>
+                  <td style="font-size: 0.9rem;">{{ log.moTa }}</td>
+                  <td style="text-align: center;">
+                    <button class="nut nut-phu nut-nho" ng-click="vm.xemChiTiet(log)" title="Xem Diff JSON">
+                      <i class="bi bi-code-square"></i> Chi Tiết
+                    </button>
+                    <button class="nut nut-vien nut-nho" ng-click="vm.xemLichSuPhienBan(log.bang, log.khoaChinh)" title="Xem các phiên bản (Versioning)">
+                      <i class="bi bi-clock"></i> Lịch Sử
+                    </button>
+                  </td>
+                </tr>
+                <tr ng-if="!vm.danhSach.length">
+                  <td colspan="8" style="text-align: center; color: var(--xam-500); padding: 2rem;">
+                    Không có sự kiện nhật ký nào phù hợp với bộ lọc hiện tại.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Phân trang -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.25rem;" ng-if="vm.tongSoTrang() > 1">
+            <span style="font-size: 0.85rem; color: var(--xam-600);">
+              Trang {{ vm.trangHienTai }} / {{ vm.tongSoTrang() }}
+            </span>
+            <div style="display: flex; gap: 0.5rem;">
+              <button class="nut nut-phu nut-nho" ng-disabled="vm.trangHienTai <= 1" ng-click="vm.trangHienTai = vm.trangHienTai - 1">
+                <i class="bi bi-chevron-left"></i> Trang trước
+              </button>
+              <button class="nut nut-phu nut-nho" ng-disabled="vm.trangHienTai >= vm.tongSoTrang()" ng-click="vm.trangHienTai = vm.trangHienTai + 1">
+                Trang sau <i class="bi bi-chevron-right"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Modal Chi Tiết Diff JSON -->
+  <div class="modal-nen" id="modal-diff" ng-class="{'hien': vm.hienModalDiff}">
+    <div class="modal-hop" style="max-width: 800px; width: 90%;">
+      <div class="modal-dau" style="display: flex; justify-content: space-between; align-items: center; padding: 1.25rem; border-bottom: 1px solid var(--duong-vien);">
+        <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700;">
+          <i class="bi bi-braces text-primary"></i> Chi Tiết Sự Kiện #{{ vm.logChon.id }} ({{ vm.logChon.hanhDong }})
+        </h3>
+        <button class="nut nut-vien nut-nho" ng-click="vm.dongModalDiff()"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="modal-than" style="padding: 1.5rem; max-height: 70vh; overflow-y: auto;">
+        <div style="margin-bottom: 1rem;">
+          <p><strong>Bảng:</strong> <code>{{ vm.logChon.bang }}</code> | <strong>Mã bản ghi:</strong> {{ vm.logChon.khoaChinh }}</p>
+          <p><strong>Người thực hiện:</strong> {{ vm.logChon.tenDangNhap }} | <strong>IP:</strong> {{ vm.logChon.ipAddress || '127.0.0.1' }}</p>
+          <p><strong>Mô tả:</strong> {{ vm.logChon.moTa }}</p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div>
+            <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--xam-700); margin-bottom: 0.5rem;">Dữ liệu trước thay đổi:</h4>
+            <pre style="background: #f1f5f9; padding: 1rem; border-radius: 8px; font-size: 0.8rem; max-height: 250px; overflow: auto; border: 1px solid var(--xam-300);">{{ vm.dinhDangJson(vm.logChon.duLieuCu) }}</pre>
+          </div>
+          <div>
+            <h4 style="font-size: 0.95rem; font-weight: 700; color: #059669; margin-bottom: 0.5rem;">Dữ liệu sau thay đổi:</h4>
+            <pre style="background: #ecfdf5; padding: 1rem; border-radius: 8px; font-size: 0.8rem; max-height: 250px; overflow: auto; border: 1px solid #a7f3d0;">{{ vm.dinhDangJson(vm.logChon.duLieuMoi) }}</pre>
+          </div>
+        </div>
+      </div>
+      <div class="modal-chan" style="padding: 1rem; border-top: 1px solid var(--duong-vien); text-align: right;">
+        <button class="nut nut-phu" ng-click="vm.dongModalDiff()">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Xem Phiên Bản (Versioning Snapshot) -->
+  <div class="modal-nen" id="modal-phien-ban" ng-class="{'hien': vm.hienModalPhienBan}">
+    <div class="modal-hop" style="max-width: 850px; width: 90%;">
+      <div class="modal-dau" style="display: flex; justify-content: space-between; align-items: center; padding: 1.25rem; border-bottom: 1px solid var(--duong-vien);">
+        <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700;">
+          <i class="bi bi-clock-history text-primary"></i> Lịch Sử Phiên Bản (Versioning) - {{ vm.phienBanBang }}: #{{ vm.phienBanKhoaChinh }}
+        </h3>
+        <button class="nut nut-vien nut-nho" ng-click="vm.dongModalPhienBan()"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="modal-than" style="padding: 1.5rem; max-height: 70vh; overflow-y: auto;">
+        <div ng-if="!vm.danhSachPhienBan.length" style="text-align: center; color: var(--xam-500); padding: 2rem;">
+          Chưa có phiên bản lịch sử nào cho bản ghi này.
+        </div>
+        <div ng-repeat="pb in vm.danhSachPhienBan" style="border: 1px solid var(--xam-200); border-radius: 8px; padding: 1rem; margin-bottom: 1rem; background: #ffffff;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <div>
+              <span class="badge badge-lam" style="font-size: 0.85rem;">Phiên bản v{{ pb.soPhienBan }}</span>
+              <strong style="margin-left: 0.5rem; color: var(--xam-800);">{{ pb.nguoiCapNhat }}</strong>
+            </div>
+            <small style="color: var(--xam-500);"><i class="bi bi-calendar3"></i> {{ pb.thoiGianCapNhat | date:'yyyy-MM-dd' }}</small>
+          </div>
+          <p style="font-size: 0.85rem; color: var(--xam-600); margin-bottom: 0.5rem;">Ghi chú: {{ pb.ghiChu || 'Cập nhật hệ thống' }}</p>
+          <pre style="background: #f8fafc; padding: 0.75rem; border-radius: 6px; font-size: 0.8rem; max-height: 150px; overflow: auto; border: 1px solid var(--xam-200);">{{ vm.dinhDangJson(pb.duLieuSnapshot) }}</pre>
+        </div>
+      </div>
+      <div class="modal-chan" style="padding: 1rem; border-top: 1px solid var(--duong-vien); text-align: right;">
+        <button class="nut nut-phu" ng-click="vm.dongModalPhienBan()">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../angular.min.js"></script>
+  <script src="../js/cau-hinh.js"></script>
+  <script src="../js/angular-app.js"></script>
+  <script src="../js/xac-thuc.js"></script>
+  <script src="../js/tien-ich.js"></script>
+  <script src="../js/goi-api.js"></script>
+  <script src="../js/dieu-huong.js"></script>
+
+  <script>
+    angular.module('qlbcApp')
+      .controller('AuditLogController', ['GoiApiService', function(GoiApiService) {
+        var vm = this;
+        vm.nguoiDung = XacThuc.kiemTraQuyen(['Admin']);
+        if (!vm.nguoiDung) return;
+
+        vm.danhSach = [];
+        vm.tuKhoa = '';
+        vm.boLocBang = '';
+        vm.boLocHanhDong = '';
+        vm.gioiHan = '100';
+
+        // Phân trang
+        vm.trangHienTai = 1;
+        vm.kichThuocTrang = 15;
+
+        vm.tongSoTrang = function() {
+          var filtered = vm.danhSach ? vm.danhSach.filter(function(item) {
+            if (!vm.tuKhoa) return true;
+            var kw = vm.tuKhoa.toLowerCase();
+            return (item.moTa && item.moTa.toLowerCase().indexOf(kw) !== -1) ||
+                   (item.tenDangNhap && item.tenDangNhap.toLowerCase().indexOf(kw) !== -1) ||
+                   (item.khoaChinh && item.khoaChinh.toString().indexOf(kw) !== -1);
+          }) : [];
+          return Math.ceil(filtered.length / vm.kichThuocTrang) || 1;
+        };
+
+        vm.tenHanhDong = function(hd) {
+          if (!hd) return '';
+          switch(hd.toLowerCase()) {
+            case 'create': return 'Thêm mới';
+            case 'update': return 'Cập nhật';
+            case 'softdelete': return 'Xóa';
+            case 'restore': return 'Khôi phục';
+            default: return hd;
+          }
+        };
+
+        vm.tenBang = function(b) {
+          if (!b) return '';
+          switch(b.toLowerCase()) {
+            case 'docgia': return 'Độc giả';
+            case 'dangky': return 'Đăng ký';
+            case 'phathanh': return 'Phát hành';
+            case 'hoadon': return 'Hóa đơn';
+            case 'thanhtoan': return 'Thanh toán';
+            default: return b;
+          }
+        };
+
+        vm.taiDuLieu = function() {
+          GoiApiService.layNhatKyAudit(vm.boLocBang, vm.boLocHanhDong, parseInt(vm.gioiHan) || 100)
+            .then(function(res) {
+              vm.danhSach = Array.isArray(res.data) ? res.data : [];
+              vm.trangHienTai = 1;
+            })
+            .catch(function(err) {
+              TienIch.thongBao('Không thể tải nhật ký audit: ' + (err.message || 'Lỗi kết nối'), 'canh-bao');
+            });
+        };
+
+        vm.lamMoi = function() {
+          vm.tuKhoa = '';
+          vm.boLocBang = '';
+          vm.boLocHanhDong = '';
+          vm.gioiHan = '100';
+          vm.trangHienTai = 1;
+          vm.taiDuLieu();
+        };
+
+        vm.dinhDangJson = function(str) {
+          if (!str) return '(Trống)';
+          try {
+            var obj = typeof str === 'string' ? JSON.parse(str) : str;
+            return JSON.stringify(obj, null, 2);
+          } catch(e) {
+            return str;
+          }
+        };
+
+        // Modal Diff
+        vm.hienModalDiff = false;
+        vm.logChon = {};
+        vm.xemChiTiet = function(log) {
+          vm.logChon = log;
+          vm.hienModalDiff = true;
+        };
+        vm.dongModalDiff = function() {
+          vm.hienModalDiff = false;
+        };
+
+        // Modal Versioning
+        vm.hienModalPhienBan = false;
+        vm.danhSachPhienBan = [];
+        vm.phienBanBang = '';
+        vm.phienBanKhoaChinh = '';
+        vm.xemLichSuPhienBan = function(bang, khoaChinh) {
+          vm.phienBanBang = bang;
+          vm.phienBanKhoaChinh = khoaChinh;
+          GoiApiService.layLichSuPhienBan(bang, khoaChinh)
+            .then(function(res) {
+              vm.danhSachPhienBan = Array.isArray(res.data) ? res.data : [];
+              vm.hienModalPhienBan = true;
+            })
+            .catch(function(err) {
+              TienIch.thongBao('Lỗi lấy lịch sử phiên bản: ' + (err.message || 'Lỗi server'), 'canh-bao');
+            });
+        };
+        vm.dongModalPhienBan = function() {
+          vm.hienModalPhienBan = false;
+        };
+
+        // Xuất Excel (.xls)
+        vm.xuatExcel = function() {
+          if (!vm.danhSach || !vm.danhSach.length) {
+            TienIch.thongBao('Không có dữ liệu nhật ký để xuất!', 'canh-bao');
+            return;
+          }
+          var cot = [
+            { field: 'id', title: 'Mã' },
+            { field: 'thoiGian', title: 'Thời Gian' },
+            { field: 'tenDangNhap', title: 'Người Dùng' },
+            { field: 'hanhDong', title: 'Hành Động' },
+            { field: 'bang', title: 'Bảng Dữ Liệu' },
+            { field: 'khoaChinh', title: 'Khóa Chính' },
+            { field: 'moTa', title: 'Mô Tả Chi Tiết' }
+          ];
+          TienIch.xuatExcel(vm.danhSach, cot, 'NhatKyHeThong_AuditLog_' + new Date().toISOString().slice(0, 10));
+        };
+
+        vm.taiDuLieu();
+      }]);
+  </script>
+</body>
+</html>

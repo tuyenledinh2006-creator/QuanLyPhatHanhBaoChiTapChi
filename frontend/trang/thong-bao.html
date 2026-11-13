@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="vi" ng-app="qlbcApp">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thông Báo Tòa Soạn - Quản lý Báo chí</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%232563eb'><path d='M2 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H2zm12-1a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h12z'/></svg>" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="../css/chung.css" />
+  <link rel="stylesheet" href="../css/bo-cuc.css" />
+  <link rel="stylesheet" href="../css/thanh-phan.css" />
+  <link rel="stylesheet" href="../css/bieu-mau.css" />
+  <style>[ng-cloak] { display: none !important; }</style>
+</head>
+<body ng-cloak ng-controller="ThongBaoController as vm">
+  <div id="ung-dung">
+    <div id="overlay-sidebar"></div>
+
+    <aside id="sidebar" aria-label="Thanh bên điều hướng">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-icon"><i class="bi bi-newspaper"></i></div>
+        <div class="sidebar-logo-ten">Quản Lý Báo Chí</div>
+        <button id="nut-thu-gon-sidebar" type="button" class="nut nut-vien nut-nho" title="Thu gọn / Mở rộng">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+      </div>
+      <nav class="sidebar-noi-dung" aria-label="Menu điều hướng chính"></nav>
+      <div class="sidebar-footer"></div>
+    </aside>
+
+    <div id="vung-chinh">
+      <header id="header" style="justify-content: space-between;">
+        <h1 style="font-size: 1.25rem; font-weight: 700; color: var(--xam-900); margin: 0;">
+          <i class="bi bi-bell text-primary"></i> {{ vm.isStaff ? 'Quản Lý & Phát Thông Báo Tòa Soạn' : 'Hộp Thư Thông Báo Từ Tòa Soạn' }}
+        </h1>
+        <div style="display: flex; gap: 0.75rem;">
+          <button class="nut nut-vien nut-nho" ng-if="!vm.isStaff" ng-click="vm.danhDauTatCaDaDoc()">
+            <i class="bi bi-check2-all"></i> Đọc tất cả
+          </button>
+          <button class="nut nut-vien nut-nho" ng-if="!vm.isStaff && vm.danhSach.length" ng-click="vm.xoaTatCa()" title="Xóa toàn bộ thông báo trong hộp thư của bạn" style="color: #ef4444; border-color: #fecaca;">
+            <i class="bi bi-trash3"></i> Xóa tất cả
+          </button>
+          <button ng-if="vm.isStaff" class="nut nut-chinh nut-nho" ng-click="vm.moModalGui()">
+            <i class="bi bi-send"></i> Phát Thông Báo Mới
+          </button>
+          <button class="nut nut-phu nut-nho" ng-click="vm.taiDanhSach()"><i class="bi bi-arrow-clockwise"></i> Làm Mới</button>
+        </div>
+      </header>
+
+      <main class="vung-lam-viec" style="padding: 1.5rem;">
+        <!-- Thanh lọc người nhận dành riêng cho Quản trị viên / Biên tập viên -->
+        <div class="the" ng-if="vm.isStaff" style="padding: 1rem 1.25rem; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <span style="font-weight: 600; font-size: 0.9rem; color: var(--xam-700);">
+              <i class="bi bi-funnel"></i> Lọc theo độc giả:
+            </span>
+            <select class="o-nhap" style="width: auto; padding: 4px 10px; font-size: 0.85rem;" ng-model="vm.boLocDocGia">
+              <option value="">-- Tất cả độc giả --</option>
+              <option ng-repeat="dg in vm.danhSachDocGia" value="{{ dg.maDocGia }}">
+                {{ dg.hoTen || dg.tenDocGia || dg.tenDangNhap }}
+              </option>
+            </select>
+          </div>
+          <div style="font-size: 0.85rem; color: var(--xam-500);">
+            Tổng số thông báo: <strong>{{ vm.danhSachHienThi.length }}</strong>
+          </div>
+        </div>
+
+        <div class="the" style="padding: 1.5rem;">
+          <div style="display: flex; flex-direction: column; gap: 1rem;">
+            <div ng-repeat="tb in vm.danhSachHienThi" style="border: 1px solid var(--xam-200); border-radius: 10px; padding: 1.25rem; background: #ffffff; transition: all 0.2s;" ng-style="{'border-left': (tb.trangThai || tb.daDoc) ? '4px solid var(--xam-400)' : '4px solid var(--mau-chinh)'}">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                  <!-- Huy hiệu người nhận (chỉ hiển thị cho Staff) -->
+                  <span ng-if="vm.isStaff" class="badge badge-tim" style="font-size: 0.8rem;">
+                    <i class="bi bi-person-fill"></i> {{ tb.tenDocGia || ('Độc giả ' + tb.maDocGia) }}
+                  </span>
+
+                  <!-- Trạng thái xem -->
+                  <span class="badge" ng-class="(tb.trangThai || tb.daDoc) ? 'badge-xam' : 'badge-lam'">
+                    <i class="bi" ng-class="(tb.trangThai || tb.daDoc) ? 'bi-envelope-open' : 'bi-envelope-fill'"></i>
+                    {{ vm.isStaff ? ((tb.trangThai || tb.daDoc) ? 'Độc giả đã xem' : 'Chưa đọc') : ((tb.trangThai || tb.daDoc) ? 'Đã xem' : 'Mới') }}
+                  </span>
+
+                  <h4 style="margin: 0; font-size: 1.05rem; font-weight: 700; color: var(--xam-900);">{{ tb.tieuDe }}</h4>
+                </div>
+                <small style="color: var(--xam-500);"><i class="bi bi-clock"></i> {{ tb.ngayGui | dinhDangNgay }}</small>
+              </div>
+
+              <p style="color: var(--xam-700); margin: 0.5rem 0 0.75rem 0; font-size: 0.95rem; line-height: 1.5;">
+                {{ tb.noiDung }}
+              </p>
+
+              <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed var(--xam-200);">
+                <button type="button" class="nut nut-phu nut-nho" ng-if="!vm.isStaff && !(tb.trangThai || tb.daDoc)" ng-click="vm.danhDauDaDoc(tb)">
+                  <i class="bi bi-check-all"></i> Đánh dấu đã đọc
+                </button>
+                <button type="button" class="nut nut-nguy-hiem nut-nho" ng-click="vm.xoa(tb)" title="{{ vm.isStaff ? 'Xóa thông báo của độc giả này' : 'Xóa thông báo khỏi hộp thư của bạn' }}">
+                  <i class="bi bi-trash3"></i> Xóa
+                </button>
+              </div>
+            </div>
+
+            <div ng-if="!vm.danhSachHienThi.length" style="text-align: center; color: var(--xam-500); padding: 3rem;">
+              <i class="bi bi-bell-slash" style="font-size: 2.5rem; display: block; margin-bottom: 0.5rem; color: var(--xam-400);"></i>
+              {{ vm.isStaff ? 'Chưa có thông báo nào được phát hành.' : 'Bạn không có thông báo nào mới.' }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Gửi Thông Báo Mới -->
+        <div class="modal-overlay" ng-if="vm.hienModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;">
+          <div class="the" style="background: white; border-radius: 12px; max-width: 520px; width: 90%; padding: 1.5rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+              <h3 style="margin: 0; font-size: 1.2rem;">Phát Thông Báo Tòa Soạn Đến Độc Giả</h3>
+              <button class="nut nut-phu nut-nho" ng-click="vm.hienModal = false"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <form ng-submit="vm.gui()" novalidate>
+              <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <div>
+                  <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 4px;">Người Nhận Thông Báo *</label>
+                  <select class="o-nhap" ng-model="vm.form.maDocGia" required>
+                    <option value="0">📢 Gửi tất cả độc giả trong hệ thống (Tạo riêng cho từng người)</option>
+                    <option ng-repeat="dg in vm.danhSachDocGia" value="{{ dg.maDocGia }}">
+                      👤 {{ dg.hoTen || dg.tenDocGia || dg.tenDangNhap }}
+                    </option>
+                  </select>
+                  <small style="color: var(--xam-500); font-size: 0.78rem; display: block; margin-top: 3px;">
+                    Thông báo sẽ được gửi riêng vào hộp thư của từng độc giả. Khi độc giả xóa chỉ ảnh hưởng hộp thư của riêng độc giả đó.
+                  </small>
+                </div>
+                <div>
+                  <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 4px;">Tiêu Đề Thông Báo *</label>
+                  <input type="text" class="o-nhap" placeholder="Ví dụ: Phát hành số báo đặc biệt chào xuân..." ng-model="vm.form.tieuDe" required />
+                </div>
+                <div>
+                  <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 4px;">Nội Dung Chi Tiết *</label>
+                  <textarea class="o-nhap" rows="4" placeholder="Nhập nội dung thông báo gửi đến độc giả..." ng-model="vm.form.noiDung" required></textarea>
+                </div>
+              </div>
+              <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+                <button type="button" class="nut nut-phu" ng-click="vm.hienModal = false">Hủy</button>
+                <button type="submit" class="nut nut-chinh"><i class="bi bi-send-fill"></i> Phát Thông Báo</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script src="../angular.min.js"></script>
+  <script src="../js/cau-hinh.js"></script>
+  <script src="../js/angular-app.js"></script>
+  <script src="../js/xac-thuc.js"></script>
+  <script src="../js/tien-ich.js"></script>
+  <script src="../js/goi-api.js"></script>
+  <script src="../js/dieu-huong.js"></script>
+  <script>
+    angular.module('qlbcApp')
+      .controller('ThongBaoController', ['GoiApiService', '$scope', function(GoiApiService, $scope) {
+        var vm = this;
+        vm.user = XacThuc.kiemTraQuyen([]);
+        if (!vm.user) return;
+
+        vm.vaiTro = vm.user.vaiTro || vm.user.quyenHan || vm.user.role || 'DocGia';
+        if (vm.vaiTro === 'Biên tập viên' || vm.vaiTro === 'bientap') vm.vaiTro = 'BienTapVien';
+        else if (vm.vaiTro === 'Độc giả' || vm.vaiTro === 'docgia') vm.vaiTro = 'DocGia';
+        else if (typeof vm.vaiTro === 'number') vm.vaiTro = QUYEN_ROLE[vm.vaiTro] || 'DocGia';
+
+        vm.isStaff = (vm.vaiTro === 'Admin' || vm.vaiTro === 'BienTapVien');
+        vm.danhSach = [];
+        vm.danhSachHienThi = [];
+        vm.danhSachDocGia = [];
+        vm.boLocDocGia = '';
+        vm.hienModal = false;
+        vm.form = {};
+
+        // Lọc danh sách thông báo theo độc giả (dành cho Admin / Biên tập viên)
+        vm.capNhatHienThi = function() {
+          if (!vm.isStaff || !vm.boLocDocGia) {
+            vm.danhSachHienThi = vm.danhSach.slice();
+          } else {
+            var maDg = Number(vm.boLocDocGia);
+            vm.danhSachHienThi = vm.danhSach.filter(function(tb) {
+              return Number(tb.maDocGia || tb.MaDocGia) === maDg;
+            });
+          }
+        };
+
+        $scope.$watch(function() { return vm.boLocDocGia; }, function() {
+          vm.capNhatHienThi();
+        });
+
+        // Tải danh sách độc giả để hỗ trợ chọn người nhận và lọc
+        vm.taiDanhSachDocGia = function() {
+          if (!vm.isStaff) return;
+          GoiApiService.layDanhSachDocGiaChoThongBao().then(function(res) {
+            var items = res.data;
+            if (items && items.data) items = items.data;
+            vm.danhSachDocGia = Array.isArray(items) ? items : [];
+          }).catch(function(err) {
+            console.warn('Không tải được danh sách độc giả:', err);
+          });
+        };
+
+        // Tải danh sách thông báo
+        vm.taiDanhSach = function() {
+          if (vm.isStaff) {
+            // Quản trị viên / Biên tập viên: Xem lịch sử các thông báo đã gửi
+            GoiApiService.layDanhSachThongBao().then(function(res) {
+              var items = res.data;
+              if (items && items.data) items = items.data;
+              vm.danhSach = Array.isArray(items) ? items : [];
+              vm.capNhatHienThi();
+            }).catch(function(err) {
+              console.warn('Lỗi tải danh sách thông báo tòa soạn:', err);
+            });
+          } else {
+            // Độc giả: Chỉ xem đúng thông báo trong hộp thư cá nhân của chính mình
+            GoiApiService.layThongBaoCaNhan().then(function(res) {
+              var items = res.data;
+              if (items && items.data) items = items.data;
+              vm.danhSach = Array.isArray(items) ? items : [];
+              vm.danhSachHienThi = vm.danhSach.slice();
+            }).catch(function(err) {
+              console.warn('Lỗi tải thông báo độc giả:', err);
+            });
+          }
+        };
+
+        vm.moModalGui = function() {
+          vm.form = {
+            maDocGia: '0',
+            tieuDe: '',
+            noiDung: ''
+          };
+          vm.hienModal = true;
+        };
+
+        vm.gui = function() {
+          if (!vm.form.tieuDe || !vm.form.noiDung) {
+            alert('Vui lòng nhập đầy đủ tiêu đề và nội dung!');
+            return;
+          }
+          var today = new Date();
+          var maDg = Number(vm.form.maDocGia) || 0;
+          var payload = {
+            maDocGia: maDg,
+            tieuDe: vm.form.tieuDe,
+            noiDung: vm.form.noiDung,
+            ngayGui: today.toISOString().split('T')[0],
+            trangThai: false
+          };
+
+          GoiApiService.guiThongBao(payload).then(function(res) {
+            var msg = (res && res.data && res.data.message) ? res.data.message : 'Phát thông báo thành công!';
+            TienIch.thongBao(msg, 'thanh-cong');
+            vm.hienModal = false;
+            vm.taiDanhSach();
+          }).catch(function(err) {
+            TienIch.thongBao('Lỗi gửi: ' + (err.data && err.data.message ? err.data.message : 'Kiểm tra lại dữ liệu'), 'canh-bao');
+          });
+        };
+
+        vm.danhDauDaDoc = function(tb) {
+          if (!tb) return;
+          var id = tb.maThongBao || tb.MaThongBao || tb.id || tb.Id;
+          if (!id) {
+            TienIch.thongBao('Không tìm thấy mã thông báo cần cập nhật!', 'canh-bao');
+            return;
+          }
+
+          tb.trangThai = true;
+          tb.daDoc = true;
+
+          GoiApiService.danhDauDaDoc(id).then(function() {
+            TienIch.thongBao('Đã đánh dấu thông báo là đã đọc!', 'thanh-cong');
+          }).catch(function(err) {
+            console.warn('Lỗi gọi API đánh dấu đã đọc:', err);
+            TienIch.thongBao('Đã ghi nhận thông báo đã xem.', 'thong-tin');
+          });
+        };
+
+        vm.danhDauTatCaDaDoc = function() {
+          if (!vm.danhSach || !vm.danhSach.length) {
+            TienIch.thongBao('Hộp thư không có thông báo nào!', 'thong-tin');
+            return;
+          }
+          var chuaDoc = vm.danhSach.filter(function(tb) { return !(tb.trangThai || tb.daDoc); });
+          if (!chuaDoc.length) {
+            TienIch.thongBao('Tất cả thông báo đều đã được đọc.', 'thong-tin');
+            return;
+          }
+
+          chuaDoc.forEach(function(tb) {
+            tb.trangThai = true;
+            tb.daDoc = true;
+            var id = tb.maThongBao || tb.MaThongBao || tb.id || tb.Id;
+            if (id) {
+              GoiApiService.danhDauDaDoc(id);
+            }
+          });
+          TienIch.thongBao('Đã đánh dấu tất cả thông báo trong hộp thư là đã đọc!', 'thanh-cong');
+        };
+
+        // Xóa thông báo: CỦA AI XÓA CỦA NGƯỜI Ý
+        vm.xoa = function(tb) {
+          if (!tb) return;
+          var id = tb.maThongBao || tb.MaThongBao || tb.id || tb.Id;
+          if (!id) {
+            TienIch.thongBao('Không tìm thấy mã thông báo cần xóa!', 'canh-bao');
+            return;
+          }
+
+          var cauHoi = vm.isStaff
+            ? ('Bạn có chắc muốn xóa thông báo gửi đến độc giả ' + (tb.tenDocGia || (tb.maDocGia || tb.MaDocGia)) + '?')
+            : ('Bạn có chắc muốn xóa thông báo "' + (tb.tieuDe || id) + '" khỏi hộp thư của bạn?');
+
+          if (!confirm(cauHoi)) return;
+
+          GoiApiService.xoaThongBao(id).then(function() {
+            TienIch.thongBao('Đã xóa thông báo thành công!', 'thanh-cong');
+            vm.taiDanhSach();
+          }).catch(function(err) {
+            TienIch.thongBao('Lỗi xóa thông báo: ' + (err.data && err.data.message ? err.data.message : 'Vui lòng thử lại sau'), 'canh-bao');
+          });
+        };
+
+        // Xóa tất cả: Chỉ dành riêng cho Độc giả đối với hộp thư của chính độc giả đó
+        vm.xoaTatCa = function() {
+          if (vm.isStaff) return;
+          if (!vm.danhSach || !vm.danhSach.length) {
+            TienIch.thongBao('Hộp thư không có thông báo nào để xóa!', 'thong-tin');
+            return;
+          }
+          if (!confirm('Bạn có chắc muốn xóa toàn bộ ' + vm.danhSach.length + ' thông báo trong hộp thư của mình? Thao tác này chỉ xóa hộp thư cá nhân của bạn.')) return;
+
+          GoiApiService.xoaTatCaThongBaoCaNhan().then(function() {
+            TienIch.thongBao('Đã làm trống hộp thư thông báo của bạn!', 'thanh-cong');
+            vm.taiDanhSach();
+          }).catch(function() {
+            // Dự phòng xóa từng cái nếu endpoint hàng loạt chưa kịp nhận
+            var dsCanXoa = vm.danhSach.slice();
+            var promises = dsCanXoa.map(function(tb) {
+              var id = tb.maThongBao || tb.MaThongBao || tb.id || tb.Id;
+              return id ? GoiApiService.xoaThongBao(id) : Promise.resolve();
+            });
+
+            Promise.all(promises).then(function() {
+              TienIch.thongBao('Đã xóa tất cả thông báo của bạn!', 'thanh-cong');
+              vm.taiDanhSach();
+            }).catch(function() {
+              vm.taiDanhSach();
+            });
+          });
+        };
+
+        vm.taiDanhSachDocGia();
+        vm.taiDanhSach();
+      }]);
+  </script>
+</body>
+</html>

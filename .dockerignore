@@ -1,0 +1,17 @@
+**/.git
+**/.vs
+**/.vscode
+**/bin
+**/obj
+**/*.user
+**/*.suo
+**/*.log
+.env
+.env.*
+!.env.example
+*.sql
+EXCEL, CSV/
+TestResults/
+docker-compose*.yml
+Dockerfile*
+README.md

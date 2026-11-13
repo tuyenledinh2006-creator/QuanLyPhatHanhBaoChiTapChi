@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Hệ thống Quản lý Phát hành Báo chí & Tạp chí" />
+  <title>Đang chuyển hướng... - Quản lý Phát hành Báo chí</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%232563eb'><path d='M2 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H2zm12-1a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h12z'/><path d='M3.5 3h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1 0-1zm0 2h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1 0-1zm0 2h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1 0-1zm0 2h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1 0-1zm0 2h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1 0-1z'/></svg>" />
+  <link rel="stylesheet" href="css/chung.css" />
+  <link rel="stylesheet" href="css/bo-cuc.css" />
+  <script>
+    (function() {
+      try {
+        var raw = sessionStorage.getItem('current_user') || sessionStorage.getItem('nguoi_dung_hien_tai');
+        if (raw && JSON.parse(raw)) {
+          window.location.replace('trang/tong-quan.html');
+        } else {
+          window.location.replace('trang/dang-nhap.html');
+        }
+      } catch (e) {
+        window.location.replace('trang/dang-nhap.html');
+      }
+    })();
+  </script>
+</head>
+<body>
+  <main class="can-giua-toan-man" style="display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f8fafc; font-family: 'Inter', sans-serif;">
+    <div class="the the-chuyen-huong van-ban-trung" style="background: #ffffff; padding: 2rem 3rem; border-radius: 1rem; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); text-align: center;">
+      <div class="quay-vong can-giua" style="width: 48px; height: 48px; border: 4px solid #e2e8f0; border-top-color: #4f46e5; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1.5rem auto;"></div>
+      <h1 class="tieu-de-chuyen-huong" style="font-size: 1.5rem; font-weight: 700; color: #1e293b; margin-bottom: 0.5rem;">Hệ Thống Quản Lý Phát Hành Báo Chí</h1>
+      <p class="mo-ta-chuyen-huong" style="color: #64748b; font-size: 0.95rem;">Đang tải và chuyển hướng tới giao diện làm việc...</p>
+    </div>
+  </main>
+  <style>
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</body>
+</html>

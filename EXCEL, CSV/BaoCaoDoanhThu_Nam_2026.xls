@@ -1,0 +1,114 @@
+﻿
+      <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+      <head>
+        <meta http-equiv="content-type" content="application/vnd.ms-excel; charset=UTF-8">
+        <style>
+          table { border-collapse: collapse; border-spacing: 0; width: 100%; font-family: Arial, 'Segoe UI', sans-serif; font-size: 11pt; margin-bottom: 20px; border: .5pt solid #000000; }
+          th { background-color: #ffffff; color: #000000; border: .5pt solid #000000; padding: 6px 10px; font-size: 11pt; font-weight: bold; text-align: center; }
+          td { border: .5pt solid #000000; padding: 5px 8px; font-size: 11pt; color: #000000; }
+          .so { mso-number-format:"\#\,\#\#0"; text-align: right; }
+          .tong-cong { background-color: #ffffff; font-weight: bold; }
+        </style>
+      </head>
+      <body>
+        <h2 style="font-family: Arial, sans-serif; font-size: 14pt; font-weight: bold; color: #000000; margin: 0 0 4px 0;">BÁO CÁO TỔNG HỢP DOANH THU PHÁT HÀNH BÁO CHÍ NĂM 2026</h2>
+        <p style="font-family: Arial, sans-serif; font-size: 10pt; color: #555555; margin: 0 0 14px 0;">Thời gian xuất: 13:32:40 9/11/2026 | Đơn vị tiền tệ: VNĐ</p>
+
+        <h3 style="font-family: Arial, sans-serif; font-size: 12pt; font-weight: bold; color: #000000; margin: 12px 0 6px 0;">I. DOANH THU THEO TỪNG THÁNG</h3>
+        <table border="1" cellpadding="6" cellspacing="0" style="border-collapse: collapse; border: .5pt solid #000000; font-family: Arial, sans-serif; font-size: 11pt; width: 100%;">
+          <thead>
+            <tr>
+              <th style="border: .5pt solid #000000; background-color: #ffffff; color: #000000;">STT</th>
+              <th style="border: .5pt solid #000000; background-color: #ffffff; color: #000000;">Kỳ Tháng</th>
+              <th style="border: .5pt solid #000000; background-color: #ffffff; color: #000000;">Số Hóa Đơn</th>
+              <th style="border: .5pt solid #000000; background-color: #ffffff; color: #000000;">Doanh Thu (VNĐ)</th>
+              <th style="border: .5pt solid #000000; background-color: #ffffff; color: #000000;">Tỷ Trọng</th>
+            </tr>
+          </thead>
+          <tbody>
+            
+        <tr>
+          <td style="border: .5pt solid #000000; text-align: center;">1</td>
+          <td style="border: .5pt solid #000000;">Tháng 9/2026</td>
+          <td style="border: .5pt solid #000000; text-align: center;">7</td>
+          <td class="so" style="border: .5pt solid #000000; text-align: right; font-weight: bold;">2310000</td>
+          <td style="border: .5pt solid #000000; text-align: center;">58.8%</td>
+        </tr>
+      
+        <tr>
+          <td style="border: .5pt solid #000000; text-align: center;">2</td>
+          <td style="border: .5pt solid #000000;">Tháng 11/2026</td>
+          <td style="border: .5pt solid #000000; text-align: center;">10</td>
+          <td class="so" style="border: .5pt solid #000000; text-align: right; font-weight: bold;">1620000</td>
+          <td style="border: .5pt solid #000000; text-align: center;">41.2%</td>
+        </tr>
+      
+            <tr class="tong-cong" style="font-weight: bold;">
+              <td colspan="2" style="border: .5pt solid #000000; text-align: center;">TỔNG CỘNG CẢ NĂM:</td>
+              <td style="border: .5pt solid #000000; text-align: center;">17</td>
+              <td class="so" style="border: .5pt solid #000000; text-align: right; color: #000000;">3930000</td>
+              <td style="border: .5pt solid #000000; text-align: center;">100%</td>
+            </tr>
+          </tbody>
+        </table>
+
+        
+          <h3 style="font-family: Arial, sans-serif; font-size: 12pt; font-weight: bold; color: #000000; margin: 16px 0 6px 0;">II. TOP ẤN PHẨM BÁO CHÍ BÁN CHẠY NHẤT</h3>
+          <table border="1" cellpadding="6" cellspacing="0" style="border-collapse: collapse; border: .5pt solid #000000; font-family: Arial, sans-serif; font-size: 11pt; width: 100%;">
+            <thead>
+              <tr>
+                <th style="border: .5pt solid #000000; background-color: #ffffff; color: #000000;">STT</th>
+                <th style="border: .5pt solid #000000; background-color: #ffffff; color: #000000;">Mã AP</th>
+                <th style="border: .5pt solid #000000; background-color: #ffffff; color: #000000;">Tên Ấn Phẩm Báo Chí</th>
+                <th style="border: .5pt solid #000000; background-color: #ffffff; color: #000000;">Số Lượt Thuê Bao</th>
+                <th style="border: .5pt solid #000000; background-color: #ffffff; color: #000000;">Tổng Doanh Thu (VNĐ)</th>
+              </tr>
+            </thead>
+            <tbody>
+              
+        <tr>
+          <td style="border: .5pt solid #000000; text-align: center;">1</td>
+          <td style="border: .5pt solid #000000; text-align: center;">#4</td>
+          <td style="border: .5pt solid #000000;"><strong>Tạp chí Công Nghệ</strong></td>
+          <td style="border: .5pt solid #000000; text-align: center;">22</td>
+          <td class="so" style="border: .5pt solid #000000; text-align: right; font-weight: bold;">640000</td>
+        </tr>
+      
+        <tr>
+          <td style="border: .5pt solid #000000; text-align: center;">2</td>
+          <td style="border: .5pt solid #000000; text-align: center;">#2</td>
+          <td style="border: .5pt solid #000000;"><strong>Báo Nhân Văn</strong></td>
+          <td style="border: .5pt solid #000000; text-align: center;">8</td>
+          <td class="so" style="border: .5pt solid #000000; text-align: right; font-weight: bold;">360000</td>
+        </tr>
+      
+        <tr>
+          <td style="border: .5pt solid #000000; text-align: center;">3</td>
+          <td style="border: .5pt solid #000000; text-align: center;">#1</td>
+          <td style="border: .5pt solid #000000;"><strong>Báo Thời Đại</strong></td>
+          <td style="border: .5pt solid #000000; text-align: center;">6</td>
+          <td class="so" style="border: .5pt solid #000000; text-align: right; font-weight: bold;">1895000</td>
+        </tr>
+      
+        <tr>
+          <td style="border: .5pt solid #000000; text-align: center;">4</td>
+          <td style="border: .5pt solid #000000; text-align: center;">#6</td>
+          <td style="border: .5pt solid #000000;"><strong>Tạp chí Giáo Dục</strong></td>
+          <td style="border: .5pt solid #000000; text-align: center;">1</td>
+          <td class="so" style="border: .5pt solid #000000; text-align: right; font-weight: bold;">280000</td>
+        </tr>
+      
+        <tr>
+          <td style="border: .5pt solid #000000; text-align: center;">5</td>
+          <td style="border: .5pt solid #000000; text-align: center;">#5</td>
+          <td style="border: .5pt solid #000000;"><strong>Tạp chí Số Hóa</strong></td>
+          <td style="border: .5pt solid #000000; text-align: center;">1</td>
+          <td class="so" style="border: .5pt solid #000000; text-align: right; font-weight: bold;">450000</td>
+        </tr>
+      
+            </tbody>
+          </table>
+        
+      </body>
+      </html>
+    

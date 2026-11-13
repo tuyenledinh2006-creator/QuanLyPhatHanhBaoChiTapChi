@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="vi" ng-app="qlbcApp">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quản Lý Đặt Báo & Thuê Bao - Quản lý Báo chí</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%232563eb'><path d='M2 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H2zm12-1a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h12z'/></svg>" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="../css/chung.css" />
+  <link rel="stylesheet" href="../css/bo-cuc.css" />
+  <link rel="stylesheet" href="../css/thanh-phan.css" />
+  <link rel="stylesheet" href="../css/bieu-mau.css" />
+  <style>[ng-cloak] { display: none !important; }</style>
+</head>
+<body ng-cloak ng-controller="DangKyController as vm">
+  <div id="ung-dung">
+    <div id="overlay-sidebar"></div>
+
+    <aside id="sidebar" aria-label="Thanh bên điều hướng">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-icon"><i class="bi bi-newspaper"></i></div>
+        <div class="sidebar-logo-ten">Quản Lý Báo Chí</div>
+        <button id="nut-thu-gon-sidebar" type="button" class="nut nut-vien nut-nho" title="Thu gọn / Mở rộng">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+      </div>
+      <nav class="sidebar-noi-dung" aria-label="Menu điều hướng chính"></nav>
+      <div class="sidebar-footer"></div>
+    </aside>
+
+    <div id="vung-chinh">
+      <header id="header" style="justify-content: space-between;">
+        <h1 style="font-size: 1.25rem; font-weight: 700; color: var(--xam-900); margin: 0;">
+          <i class="bi bi-card-checklist text-primary"></i> Quản Lý Thuê Bao Đặt Báo Định Kỳ
+        </h1>
+        <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+          <button ng-if="vm.vaiTro !== 'DocGia'" class="nut nut-phu nut-nho" ng-click="vm.xuatExcel()" title="Xuất file Excel (.xls)">
+            <i class="bi bi-file-earmark-excel text-success"></i> Xuất Excel
+          </button>
+          <button ng-if="vm.vaiTro === 'DocGia'" class="nut nut-chinh nut-nho" ng-click="vm.moModalDangKy()">
+            <i class="bi bi-cart-plus"></i> Đặt Báo Mới
+          </button>
+          <button class="nut nut-phu nut-nho" ng-click="vm.lamMoi()" title="Làm mới & tải lại danh sách">
+            <i class="bi bi-arrow-clockwise"></i> Làm Mới
+          </button>
+        </div>
+      </header>
+
+      <main class="vung-lam-viec" style="padding: 1.5rem;">
+        <!-- Tabs chuyển đổi giữa Danh Sách và Thùng Rác -->
+        <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+          <button class="nut" ng-class="vm.tabHienTai === 'danhSach' ? 'nut-chinh' : 'nut-phu'" ng-click="vm.chuyenTab('danhSach')">
+            <i class="bi bi-list-check"></i> Thuê Bao Đang Hoạt Động ({{ vm.danhSach.length }})
+          </button>
+          <button class="nut" ng-class="vm.tabHienTai === 'thungRac' ? 'nut-nguy-hiem' : 'nut-phu'" ng-click="vm.chuyenTab('thungRac')">
+            <i class="bi bi-trash3"></i> Thùng Rác ({{ vm.danhSachThungRac.length }})
+          </button>
+        </div>
+
+        <div class="the" style="padding: 1.5rem;">
+          <!-- Tìm kiếm & Lọc -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; gap: 1rem; flex-wrap: wrap;">
+            <div style="display: flex; gap: 0.75rem; flex: 1; max-width: 820px; flex-wrap: wrap; align-items: center;">
+              <input type="text" class="o-nhap" style="min-width: 220px; flex: 1;" placeholder="Tìm theo tên độc giả, ấn phẩm, mã..." ng-model="vm.tuKhoa" ng-change="vm.trangHienTai = 1" />
+              <select class="o-chon" style="width: 175px;" ng-model="vm.boLocKyHan" ng-change="vm.trangHienTai = 1">
+                <option value="">-- Tất cả loại đặt --</option>
+                <option value="0">Báo lẻ</option>
+                <option value="1">1 Tháng</option>
+                <option value="3">3 Tháng</option>
+                <option value="6">6 Tháng</option>
+                <option value="12">12 Tháng</option>
+              </select>
+              <select class="o-chon" style="width: 220px;" ng-if="vm.vaiTro !== 'DocGia'" ng-model="vm.boLocDocGia" ng-change="vm.trangHienTai = 1">
+                <option value="">-- Tất cả độc giả đặt báo --</option>
+                <option ng-repeat="dg in vm.danhSachDocGia" ng-value="dg.maDocGia">
+                  {{ dg.hoTen || dg.tenDangNhap }}
+                </option>
+              </select>
+            </div>
+            <div style="color: var(--xam-600); font-size: 0.9rem;">
+              Tổng cộng: <strong>{{ vm.danhSachHienThi().length }}</strong> lượt thuê bao
+            </div>
+          </div>
+
+          <!-- Bảng Danh Sách Đăng Ký -->
+          <div class="bang-cuon" style="overflow-x: auto;">
+            <table class="bang">
+              <thead>
+                <tr>
+                  <th style="cursor: pointer; width: 90px;" ng-click="vm.sapXep('maDangKy')">
+                    Mã ĐK <i class="bi" ng-class="vm.bieuTuongSapXep('maDangKy')"></i>
+                  </th>
+                  <th>Độc Giả</th>
+                  <th>Ấn Phẩm Đặt Mua</th>
+                  <th style="cursor: pointer; width: 110px;" ng-click="vm.sapXep('kyHan')">
+                    Gói Kỳ Hạn <i class="bi" ng-class="vm.bieuTuongSapXep('kyHan')"></i>
+                  </th>
+                  <th>Thời Gian Hiệu Lực</th>
+                  <th style="width: 80px;">SL</th>
+                  <th style="width: 130px;">Trạng Thái</th>
+                  <th style="width: 170px; text-align: center;">Thao Tác</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr ng-repeat="dk in vm.danhSachHienThi() | orderBy:vm.cotSapXep:vm.daoChieu | limitTo:vm.kichThuocTrang:(vm.trangHienTai - 1)*vm.kichThuocTrang">
+                  <td><strong>#{{ dk.maDangKy }}</strong></td>
+                  <td style="font-weight: 600;">{{ dk.tenDocGia || ('Độc giả ' + dk.maDocGia) }}</td>
+                  <td style="font-weight: 600; color: var(--mau-chinh);">
+                    {{ dk.tenAnPham || ('Ấn phẩm ' + dk.maAnPham) }}
+                    <span ng-if="dk.soThuTuBao" style="display: block; font-size: 0.8rem; color: #4b5563; font-weight: normal; margin-top: 2px;">
+                      <i class="bi bi-bookmark-fill text-warning"></i> Kỳ: Số {{ dk.soThuTuBao }}
+                    </span>
+                  </td>
+                  <td>
+                    <span ng-if="dk.kyHan > 0" class="badge badge-lam">{{ dk.kyHan }} tháng</span>
+                    <span ng-if="dk.kyHan == 0" class="badge" style="background: #f59e0b; color: #fff; font-weight: 600;">Báo lẻ</span>
+                  </td>
+                  <td>
+                    <span ng-if="dk.kyHan == 0">{{ dk.ngayBatDau | dinhDangNgay }} (Trong ngày)</span>
+                    <span ng-if="dk.kyHan > 0">{{ dk.ngayBatDau | dinhDangNgay }} <i class="bi bi-arrow-right"></i> {{ dk.ngayKetThuc | dinhDangNgay }}</span>
+                  </td>
+                  <td><strong>{{ dk.soLuong || 1 }}</strong> bản</td>
+                  <td>
+                    <span class="badge" ng-class="{
+                      'badge-xanh': dk.trangThai === 'Đã duyệt' || dk.trangThai === 'Hiệu lực' || dk.trangThai === 'Đang hoạt động',
+                      'badge-vang': dk.trangThai === 'Chờ thanh toán' || dk.trangThai === 'Chờ duyệt',
+                      'badge-do': dk.trangThai === 'Đã hủy'
+                    }">
+                      {{ dk.trangThai || 'Chờ thanh toán' }}
+                    </span>
+                    <!-- Trạng thái giao hàng / phát hành -->
+                    <div ng-if="dk.trangThaiGiaoHang" style="margin-top: 5px;">
+                      <span class="badge" ng-class="{
+                        'badge-xanh': dk.trangThaiGiaoHang === 'Đã giao',
+                        'badge-lam': dk.trangThaiGiaoHang === 'Đang giao',
+                        'badge-vang': dk.trangThaiGiaoHang === 'Chờ xử lý'
+                      }" title="Trạng thái giao đơn">
+                        <i class="bi bi-truck"></i> {{ dk.trangThaiGiaoHang }}
+                      </span>
+                    </div>
+                  </td>
+                  <td style="text-align: center;">
+                    <div style="display: flex; gap: 4px; justify-content: center; align-items: center; flex-wrap: wrap;">
+                      <!-- Nút Thanh Toán: Chỉ hiển thị cho Độc giả (Admin và Biên tập viên không thanh toán thay) -->
+                      <button ng-if="vm.vaiTro === 'DocGia' && vm.tabHienTai === 'danhSach' && (dk.trangThai === 'Chờ thanh toán' || dk.trangThai === 'Chờ duyệt')" 
+                              type="button" class="nut nut-chinh nut-nho" title="Thanh toán" ng-click="vm.moModalTraTien(dk)">
+                        <i class="bi bi-credit-card"></i> Thanh Toán
+                      </button>
+
+                      <!-- Khi là Admin hoặc Biên tập viên và đơn chờ thanh toán: Chỉ hiển thị nhãn chờ độc giả thanh toán -->
+                      <span ng-if="vm.vaiTro !== 'DocGia' && vm.tabHienTai === 'danhSach' && (dk.trangThai === 'Chờ thanh toán' || dk.trangThai === 'Chờ duyệt')" 
+                            class="badge badge-vang" style="padding: 4px 8px; font-size: 0.8rem;" title="Chờ độc giả tự hoàn tất thanh toán">
+                        <i class="bi bi-hourglass-split"></i> Chờ độc giả thanh toán
+                      </span>
+
+                      <!-- Badge Đã thanh toán nếu gói đã hoàn tất -->
+                      <span ng-if="vm.tabHienTai === 'danhSach' && dk.trangThai !== 'Chờ thanh toán' && dk.trangThai !== 'Chờ duyệt' && dk.trangThai !== 'Đã hủy'" 
+                            class="badge badge-xanh" style="padding: 4px 8px; font-size: 0.8rem;">
+                        <i class="bi bi-check-circle-fill"></i> Đã thanh toán
+                      </span>
+
+                      <!-- Nút Hủy gói -->
+                      <button ng-if="vm.tabHienTai === 'danhSach'" type="button" class="nut nut-nguy-hiem nut-nho" title="Hủy gói" ng-click="vm.huy(dk.maDangKy)"><i class="bi bi-x-circle"></i> Hủy</button>
+
+                      <!-- Nút Khôi phục nếu ở thùng rác -->
+                      <button ng-if="vm.tabHienTai === 'thungRac'" type="button" class="nut nut-thanh-cong nut-nho" ng-click="vm.khoiPhuc(dk.maDangKy)" title="Khôi phục thuê bao">
+                        <i class="bi bi-arrow-counterclockwise"></i> Khôi Phục
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr ng-if="!vm.danhSachHienThi().length">
+                  <td colspan="8" style="text-align: center; color: var(--xam-500); padding: 2.5rem;">
+                    Không tìm thấy thuê bao nào phù hợp.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Phân trang -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.25rem;" ng-if="vm.tongSoTrang() > 1">
+            <span style="font-size: 0.85rem; color: var(--xam-600);">
+              Trang {{ vm.trangHienTai }} / {{ vm.tongSoTrang() }} (Tổng: {{ vm.danhSachHienThi().length }})
+            </span>
+            <div style="display: flex; gap: 0.5rem;">
+              <button class="nut nut-phu nut-nho" ng-disabled="vm.trangHienTai <= 1" ng-click="vm.trangHienTai = vm.trangHienTai - 1">
+                <i class="bi bi-chevron-left"></i> Trước
+              </button>
+              <button class="nut nut-phu nut-nho" ng-disabled="vm.trangHienTai >= vm.tongSoTrang()" ng-click="vm.trangHienTai = vm.trangHienTai + 1">
+                Sau <i class="bi bi-chevron-right"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Đăng Ký Mới: Chỉ dành cho Độc giả -->
+        <div class="modal-nen" ng-class="{'hien': vm.hienModal}" ng-if="vm.vaiTro === 'DocGia'">
+          <div class="modal-hop" style="max-width: 520px; width: 90%;">
+            <div class="modal-dau" style="display: flex; justify-content: space-between; align-items: center; padding: 1.25rem; border-bottom: 1px solid var(--duong-vien);">
+              <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700;">Đăng Ký Đặt Mua Báo Mới</h3>
+              <button class="nut nut-vien nut-nho" ng-click="vm.hienModal = false"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <form ng-submit="vm.xacNhanDangKy()" novalidate>
+              <div class="modal-than" style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+                <div ng-if="vm.vaiTro !== 'DocGia'">
+                  <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 4px;">Người Đặt Mua Báo *</label>
+                  <select class="o-chon" ng-model="vm.form.maDocGia" required>
+                    <option value="">-- Chọn độc giả đặt báo --</option>
+                    <option ng-repeat="dg in vm.danhSachDocGia" ng-value="dg.maDocGia">
+                      {{ dg.hoTen || dg.tenDangNhap }}
+                    </option>
+                  </select>
+                </div>
+                <div>
+                  <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 4px;">Chọn Ấn Phẩm Muốn Đặt *</label>
+                  <select class="o-chon" ng-model="vm.form.maAnPham" ng-change="vm.chonAnPham()" required>
+                    <option value="">-- Chọn ấn phẩm --</option>
+                    <option ng-repeat="ap in vm.danhSachAnPham" ng-value="ap.maAnPham">
+                      {{ ap.tenAnPham }} - ({{ (ap.gia || ap.donGia) | tienVND }}/bản)
+                    </option>
+                  </select>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                  <div>
+                    <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 4px;">Hình Thức Đặt Mua</label>
+                    <select class="o-chon" ng-model="vm.form.kyHan" ng-change="vm.thayDoiKyHan()">
+                      <option value="0">Mua Báo Lẻ</option>
+                      <option value="1">Thuê Bao 1 Tháng</option>
+                      <option value="3">Thuê Bao 3 Tháng (Tiết kiệm 5%)</option>
+                      <option value="6">Thuê Bao 6 Tháng (Tiết kiệm 10%)</option>
+                      <option value="12">Thuê Bao 12 Tháng (Tiết kiệm 15%)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 4px;">
+                      {{ vm.form.kyHan == 0 ? 'Số Lượng Báo Mua Lẻ *' : 'Số Lượng Bản/Kỳ *' }}
+                    </label>
+                    <input type="number" class="o-nhap" ng-model="vm.form.soLuong" ng-change="vm.tinhTien()" min="1" max="{{ vm.soLuongToiDa() }}" required />
+                    <small ng-if="vm.form.kyHan == 0 && vm.soBaoChon" style="display: block; margin-top: 4px; font-size: 0.78rem;" ng-class="{'text-danger': vm.form.soLuong > vm.soBaoChon.soLuongIn || vm.form.soLuong > vm.soLuongConLai()}">
+                      <i class="bi bi-info-circle"></i> Số lượng in: <strong>{{ vm.soBaoChon.soLuongIn | number }}</strong> bản
+                      | Khả dụng: <strong>{{ vm.soLuongConLai() | number }}</strong> bản
+                    </small>
+                  </div>
+                </div>
+
+                <!-- Khi Mua Báo Lẻ: Cho phép chọn kỳ phát hành / số báo cụ thể -->
+                <div ng-if="vm.form.kyHan == 0">
+                  <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 4px; color: var(--mau-chinh);">
+                    <i class="bi bi-journal-check"></i> Chọn Kỳ Phát Hành / Số Báo Cần Mua *
+                  </label>
+                  <select class="o-chon" ng-model="vm.form.maSoBao" ng-change="vm.chonSoBao()" required>
+                    <option value="">-- Chọn kỳ phát hành / số báo cụ thể --</option>
+                    <option ng-repeat="sb in vm.danhSachSoBaoCuaAnPham" ng-value="sb.maSoBao">
+                      Số {{ sb.soThuTu }} - Phát hành ngày {{ sb.ngayPhatHanh | dinhDangNgay }} (In: {{ sb.soLuongIn | number }} bản | Khả dụng: {{ (sb.soLuongIn - (sb.soLuongDaPhatHanh || 0)) | number }} bản)
+                    </option>
+                  </select>
+                  <div ng-if="!vm.danhSachSoBaoCuaAnPham.length" style="color: #dc2626; font-size: 0.8rem; margin-top: 4px;">
+                    Ấn phẩm này hiện chưa có kỳ phát hành nào sẵn sàng.
+                  </div>
+                </div>
+
+                <!-- Khi Thuê Bao Định Kỳ: Cho phép chọn ngày bắt đầu nhận báo -->
+                <div ng-if="vm.form.kyHan != 0">
+                  <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 4px;">Ngày Bắt Đầu Nhận Báo *</label>
+                  <input type="date" class="o-nhap" ng-model="vm.form.ngayBatDauModel" ng-change="vm.tinhTien()" required />
+                </div>
+
+                <div style="background: #f8fafc; border: 1px solid var(--duong-vien); border-radius: 8px; padding: 1rem;">
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem; font-size: 0.85rem;">
+                    <span style="color: var(--xam-600);">Hình thức đặt:</span>
+                    <strong style="color: var(--xam-900);">{{ vm.form.kyHan == 0 ? 'Mua báo lẻ' : 'Thuê bao định kỳ' }}</strong>
+                  </div>
+                  <div ng-if="vm.form.kyHan == 0 && vm.soBaoChon" style="display: flex; justify-content: space-between; margin-bottom: 0.35rem; font-size: 0.85rem;">
+                    <span style="color: var(--xam-600);">Kỳ báo đặt mua:</span>
+                    <strong style="color: var(--mau-chinh);">Số {{ vm.soBaoChon.soThuTu }} (Ngày {{ vm.soBaoChon.ngayPhatHanh | dinhDangNgay }})</strong>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem; font-size: 0.85rem;">
+                    <span style="color: var(--xam-600);">Thời gian hiệu lực:</span>
+                    <strong style="font-size: 0.85rem;">
+                      <span ng-if="vm.form.kyHan == 0">Ngày nhận: {{ vm.form.ngayBatDau | dinhDangNgay }} (Trong ngày)</span>
+                      <span ng-if="vm.form.kyHan != 0">{{ vm.form.ngayBatDau | dinhDangNgay }} <i class="bi bi-arrow-right"></i> {{ vm.form.ngayKetThuc | dinhDangNgay }}</span>
+                    </strong>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed var(--duong-vien); padding-top: 0.5rem; margin-top: 0.5rem;">
+                    <span style="font-weight: 600; color: var(--xam-800);">Ước tính tổng tiền:</span>
+                    <strong style="font-size: 1.25rem; color: #059669;">{{ vm.form.tongTien | tienVND }}</strong>
+                  </div>
+                </div>
+              </div>
+              <div class="modal-chan" style="padding: 1rem; border-top: 1px solid var(--duong-vien); display: flex; justify-content: flex-end; gap: 0.75rem;">
+                <button type="button" class="nut nut-phu" ng-click="vm.hienModal = false">Hủy</button>
+                <button type="submit" class="nut nut-chinh"><i class="bi bi-check-lg"></i> Xác Nhận Đặt Báo</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Modal Trả Tiền / Thanh Toán Thuê Bao: Chỉ dành cho Độc giả -->
+        <div class="modal-nen" ng-class="{'hien': vm.hienModalTraTien}" ng-if="vm.vaiTro === 'DocGia'">
+          <div class="modal-hop" style="max-width: 480px; width: 90%;">
+            <div class="modal-dau" style="display: flex; justify-content: space-between; align-items: center; padding: 1.25rem; border-bottom: 1px solid var(--duong-vien);">
+              <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: var(--xam-900);">
+                <i class="bi bi-credit-card text-primary"></i> Thanh Toán Thuê Bao #{{ vm.dangKyChon.maDangKy }}
+              </h3>
+              <button type="button" class="nut nut-vien nut-nho" ng-click="vm.hienModalTraTien = false"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <div class="modal-than" style="padding: 1.5rem; text-align: left;">
+              <div style="background: #f8fafc; border: 1px solid var(--duong-vien); border-radius: 8px; padding: 1rem; margin-bottom: 1.25rem;">
+                <div style="margin-bottom: 6px; font-size: 0.95rem;">
+                  <strong style="color: var(--xam-600);">Người đặt báo:</strong> 
+                  <span style="font-weight: 700; color: var(--xam-900);">{{ vm.dangKyChon.tenDocGia || ('Độc giả ' + vm.dangKyChon.maDocGia) }}</span>
+                </div>
+                <div style="margin-bottom: 6px; font-size: 0.95rem;">
+                  <strong style="color: var(--xam-600);">Ấn phẩm:</strong> 
+                  <span style="font-weight: 600; color: var(--mau-chinh);">{{ vm.dangKyChon.tenAnPham }}</span>
+                </div>
+                <div style="margin-bottom: 6px; font-size: 0.9rem; color: var(--xam-700);">
+                  <span>Gói kỳ hạn: <strong>{{ vm.dangKyChon.kyHan == 0 ? 'Báo lẻ (1 số)' : (vm.dangKyChon.kyHan + ' tháng') }}</strong></span>
+                  <span style="margin-left: 12px;">Số lượng: <strong>{{ vm.dangKyChon.soLuong || 1 }} bản/kỳ</strong></span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed var(--duong-vien); padding-top: 0.75rem; margin-top: 0.75rem;">
+                  <span style="font-weight: 700; font-size: 1rem; color: var(--xam-800);">Số tiền thanh toán:</span>
+                  <strong style="font-size: 1.35rem; color: #059669;">{{ vm.dangKyChon.soTienThanhToan | tienVND }}</strong>
+                </div>
+              </div>
+
+              <!-- Chọn hình thức thanh toán -->
+              <div style="margin-top: 1rem;">
+                <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 4px;">Phương thức thanh toán:</label>
+                <select class="o-chon" ng-model="vm.phuongThucTraTien">
+                  <option value="Tiền mặt">Tiền mặt tại quầy / đại lý</option>
+                  <option value="Chuyển khoản">Chuyển khoản ngân hàng / QR</option>
+                  <option value="Thẻ tín dụng">Thẻ ngân hàng (ATM / Visa)</option>
+                </select>
+              </div>
+            </div>
+            <div class="modal-chan" style="padding: 1rem; border-top: 1px solid var(--duong-vien); display: flex; justify-content: flex-end; gap: 0.75rem;">
+              <button type="button" class="nut nut-phu" ng-click="vm.hienModalTraTien = false">Đóng</button>
+              <button type="button" class="nut nut-thanh-cong" ng-click="vm.xacNhanTraTien()">
+                <i class="bi bi-check-circle-fill"></i> Thanh Toán
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script src="../angular.min.js"></script>
+  <script src="../js/cau-hinh.js"></script>
+  <script src="../js/angular-app.js"></script>
+  <script src="../js/xac-thuc.js"></script>
+  <script src="../js/tien-ich.js"></script>
+  <script src="../js/goi-api.js"></script>
+  <script src="../js/dieu-huong.js"></script>
+
+  <script>
+    angular.module('qlbcApp')
+      .controller('DangKyController', ['GoiApiService', function(GoiApiService) {
+        var vm = this;
+        vm.user = XacThuc.kiemTraQuyen(['Admin', 'BienTapVien', 'DocGia']);
+        if (!vm.user) return;
+
+        vm.vaiTro = vm.user.vaiTro || vm.user.quyenHan || vm.user.role || 'DocGia';
+        if (vm.vaiTro === 'Biên tập viên' || vm.vaiTro === 'bientap') vm.vaiTro = 'BienTapVien';
+        else if (vm.vaiTro === 'Độc giả' || vm.vaiTro === 'docgia') vm.vaiTro = 'DocGia';
+        else if (typeof vm.vaiTro === 'number') vm.vaiTro = QUYEN_ROLE[vm.vaiTro] || 'DocGia';
+
+        vm.tabHienTai = 'danhSach';
+        vm.danhSach = [];
+        vm.danhSachThungRac = [];
+        vm.danhSachAnPham = [];
+        vm.danhSachDocGia = [];
+        vm.tuKhoa = '';
+        vm.boLocKyHan = '';
+        vm.boLocDocGia = '';
+        vm.hienModal = false;
+        vm.form = {};
+
+        // Sắp xếp
+        vm.cotSapXep = 'maDangKy';
+        vm.daoChieu = true;
+
+        vm.sapXep = function(cot) {
+          if (vm.cotSapXep === cot) {
+            vm.daoChieu = !vm.daoChieu;
+          } else {
+            vm.cotSapXep = cot;
+            vm.daoChieu = false;
+          }
+        };
+
+        vm.bieuTuongSapXep = function(cot) {
+          if (vm.cotSapXep !== cot) return 'bi-arrow-down-up text-muted';
+          return vm.daoChieu ? 'bi-sort-down-alt text-primary' : 'bi-sort-up text-primary';
+        };
+
+        // Phân trang
+        vm.trangHienTai = 1;
+        vm.kichThuocTrang = 10;
+
+        vm.chuyenTab = function(tab) {
+          vm.tabHienTai = tab;
+          vm.trangHienTai = 1;
+          if (tab === 'thungRac') {
+            vm.taiThungRac();
+          } else {
+            vm.taiDanhSach();
+          }
+        };
+
+        vm.danhSachHienThi = function() {
+          var nguon = (vm.tabHienTai === 'thungRac') ? vm.danhSachThungRac : vm.danhSach;
+          return nguon.filter(function(dk) {
+            var khopTuKhoa = true;
+            if (vm.tuKhoa) {
+              var kw = vm.tuKhoa.toLowerCase();
+              khopTuKhoa = (dk.maDangKy && dk.maDangKy.toString().indexOf(kw) !== -1) ||
+                           (dk.tenDocGia && dk.tenDocGia.toLowerCase().indexOf(kw) !== -1) ||
+                           (dk.tenAnPham && dk.tenAnPham.toLowerCase().indexOf(kw) !== -1);
+            }
+            var khopKyHan = !vm.boLocKyHan || (dk.kyHan == vm.boLocKyHan);
+            var khopDocGia = !vm.boLocDocGia || (dk.maDocGia == vm.boLocDocGia);
+            return khopTuKhoa && khopKyHan && khopDocGia;
+          });
+        };
+
+        vm.tongSoTrang = function() {
+          var count = vm.danhSachHienThi().length;
+          return Math.ceil(count / vm.kichThuocTrang) || 1;
+        };
+
+        vm.taiDanhSach = function() {
+          GoiApiService.layDanhSachAnPham().then(function(res) {
+            vm.danhSachAnPham = Array.isArray(res.data) ? res.data : [];
+          });
+
+          if (vm.vaiTro === 'Admin' || vm.vaiTro === 'BienTapVien') {
+            // Lấy danh sách độc giả để hỗ trợ chọn và lọc
+            GoiApiService.layDanhSachDocGia().then(function(res) {
+              vm.danhSachDocGia = Array.isArray(res.data) ? res.data : [];
+            }).catch(function(err) {
+              console.warn('Lỗi tải danh sách độc giả', err);
+            });
+
+            // Admin / Biên tập viên lấy TẤT CẢ thuê bao của mọi độc giả (không truyền maDocGia)
+            GoiApiService.layDanhSachDangKy(null).then(function(res) {
+              vm.danhSach = Array.isArray(res.data) ? res.data : [];
+            }).catch(function() {
+              console.warn('Lỗi tải danh sách đăng ký admin/bientap');
+            });
+          } else {
+            // Độc giả chỉ xem thông tin thuê bao của chính mình
+            var maDocGia = vm.user.maDocGia || vm.user.maNguoiDung;
+            GoiApiService.layDanhSachDangKy(maDocGia).then(function(res) {
+              vm.danhSach = Array.isArray(res.data) ? res.data : [];
+            }).catch(function() {
+              console.warn('Lỗi tải danh sách đăng ký độc giả');
+            });
+          }
+        };
+
+        vm.lamMoi = function() {
+          vm.tuKhoa = '';
+          vm.boLocKyHan = '';
+          vm.boLocDocGia = '';
+          vm.trangHienTai = 1;
+          vm.taiDanhSach();
+          if (vm.tabHienTai === 'thungRac') {
+            vm.taiThungRac();
+          }
+        };
+
+        vm.taiThungRac = function() {
+          GoiApiService.layThungRacDangKy().then(function(res) {
+            vm.danhSachThungRac = Array.isArray(res.data) ? res.data : [];
+          }).catch(function(err) {
+            TienIch.thongBao('Lỗi tải thùng rác: ' + (err.message || 'Lỗi server'), 'canh-bao');
+          });
+        };
+
+        vm.khoiPhuc = function(id) {
+          if (!confirm('Khôi phục đăng ký ID #' + id + '?')) return;
+          GoiApiService.khoiPhucDangKy(id).then(function() {
+            TienIch.thongBao('Đã khôi phục gói đăng ký thành công!', 'thanh-cong');
+            vm.taiThungRac();
+          }).catch(function(err) {
+            TienIch.thongBao('Lỗi khôi phục: ' + (err.message || 'Lỗi server'), 'canh-bao');
+          });
+        };
+
+        // Xuất Excel (.xls)
+        vm.xuatExcel = function() {
+          var data = vm.danhSachHienThi();
+          if (!data.length) {
+            TienIch.thongBao('Không có dữ liệu để xuất Excel!', 'canh-bao');
+            return;
+          }
+          var cot = [
+            { field: 'maDangKy', title: 'Mã ĐK' },
+            { field: function(dk) { return dk.tenDocGia || (dk.maDocGia ? 'Độc giả ' + dk.maDocGia : ''); }, title: 'Độc Giả' },
+            { field: 'tenAnPham', title: 'Ấn Phẩm' },
+            { field: 'kyHan', title: 'Kỳ Hạn (Tháng)' },
+            { field: 'ngayBatDau', title: 'Ngày Bắt Đầu' },
+            { field: 'ngayKetThuc', title: 'Ngày Kết Thúc' },
+            { field: 'soLuong', title: 'Số Lượng' },
+            { field: 'trangThai', title: 'Trạng Thái' }
+          ];
+          TienIch.xuatExcel(data, cot, 'DanhSachThueBao_' + new Date().toISOString().slice(0, 10));
+        };
+
+        vm.danhSachSoBaoCuaAnPham = [];
+        vm.soBaoChon = null;
+        vm.Math = Math;
+
+        vm.soLuongToiDa = function() {
+          if (vm.form && vm.form.kyHan == 0 && vm.soBaoChon) {
+            return vm.soBaoChon.soLuongIn || 1000;
+          }
+          return 1000;
+        };
+
+        vm.soLuongConLai = function(sb) {
+          sb = sb || vm.soBaoChon;
+          if (!sb) return 0;
+          var inSo = Number(sb.soLuongIn) || 0;
+          var daPh = Number(sb.soLuongDaPhatHanh) || 0;
+          return Math.max(0, inSo - daPh);
+        };
+
+        vm.moModalDangKy = function() {
+          if (vm.vaiTro !== 'DocGia') {
+            TienIch.thongBao('Quản trị viên và Biên tập viên chỉ quản lý số liệu, không thể đặt báo thay cho độc giả!', 'canh-bao');
+            return;
+          }
+          var today = new Date();
+          vm.form = {
+            maDocGia: (vm.vaiTro === 'Admin' || vm.vaiTro === 'BienTapVien') ? (vm.danhSachDocGia.length ? vm.danhSachDocGia[0].maDocGia : '') : (vm.user.maDocGia || vm.user.maNguoiDung || 1),
+            maAnPham: vm.danhSachAnPham.length ? vm.danhSachAnPham[0].maAnPham : '',
+            kyHan: 0, // Mặc định mua báo lẻ
+            soLuong: 1,
+            maSoBao: '',
+            ngayBatDauModel: today,
+            tongTien: 0
+          };
+          vm.soBaoChon = null;
+          vm.taiSoBaoCuaAnPham();
+          vm.tinhTien();
+          vm.hienModal = true;
+        };
+
+        vm.chonAnPham = function() {
+          vm.soBaoChon = null;
+          vm.form.maSoBao = '';
+          vm.taiSoBaoCuaAnPham();
+          vm.tinhTien();
+        };
+
+        vm.taiSoBaoCuaAnPham = function() {
+          if (!vm.form.maAnPham) {
+            vm.danhSachSoBaoCuaAnPham = [];
+            return;
+          }
+          GoiApiService.laySoBaoTheoAnPham(vm.form.maAnPham).then(function(res) {
+            var list = (res.data && res.data.data) ? res.data.data : (Array.isArray(res.data) ? res.data : []);
+            vm.danhSachSoBaoCuaAnPham = list;
+            if (vm.form.kyHan == 0 && list.length && !vm.form.maSoBao) {
+              vm.form.maSoBao = list[0].maSoBao;
+              vm.chonSoBao();
+            }
+          }).catch(function(err) {
+            console.warn('Lỗi tải số báo', err);
+          });
+        };
+
+        vm.thayDoiKyHan = function() {
+          if (vm.form.kyHan == 0) {
+            if (!vm.danhSachSoBaoCuaAnPham || !vm.danhSachSoBaoCuaAnPham.length) {
+              vm.taiSoBaoCuaAnPham();
+            } else if (!vm.form.maSoBao) {
+              vm.form.maSoBao = vm.danhSachSoBaoCuaAnPham[0].maSoBao;
+              vm.chonSoBao();
+            }
+          }
+          vm.tinhTien();
+        };
+
+        vm.chonSoBao = function() {
+          var sb = vm.danhSachSoBaoCuaAnPham.find(function(x) { return x.maSoBao == vm.form.maSoBao; });
+          vm.soBaoChon = sb || null;
+          if (sb && sb.ngayPhatHanh) {
+            vm.form.ngayBatDauModel = new Date(sb.ngayPhatHanh);
+          }
+          vm.tinhTien();
+        };
+
+        vm.tinhTien = function() {
+          if (!vm.form.maAnPham) return;
+          var ap = vm.danhSachAnPham.find(function(x) { return x.maAnPham == vm.form.maAnPham; });
+          var gia = ap ? (ap.gia || ap.donGia || 15000) : 15000;
+          var soThang = Number(vm.form.kyHan !== undefined && vm.form.kyHan !== null ? vm.form.kyHan : 3);
+          var soLuong = Number(vm.form.soLuong) || 1;
+
+          var ngayBD = vm.form.ngayBatDauModel ? new Date(vm.form.ngayBatDauModel) : new Date();
+          var ngayKT = new Date(ngayBD);
+
+          if (soThang === 0) {
+            // Mua báo lẻ: Đơn giá * Số lượng báo mua lẻ
+            vm.form.tongTien = gia * soLuong;
+          } else {
+            ngayKT.setMonth(ngayKT.getMonth() + soThang);
+            vm.form.tongTien = gia * (soThang * 30) * soLuong;
+          }
+
+          var dinhDang = function(d) {
+            return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+          };
+
+          vm.form.ngayBatDau = dinhDang(ngayBD);
+          vm.form.ngayKetThuc = dinhDang(ngayKT);
+        };
+
+        vm.xacNhanDangKy = function() {
+          if (!vm.form.maAnPham) {
+            TienIch.thongBao('Vui lòng chọn ấn phẩm cần mua!', 'canh-bao');
+            return;
+          }
+          if (vm.vaiTro === 'Admin' && !vm.form.maDocGia) {
+            TienIch.thongBao('Vui lòng chọn độc giả đặt báo!', 'canh-bao');
+            return;
+          }
+
+          var kyHanVal = Number(vm.form.kyHan !== undefined && vm.form.kyHan !== null ? vm.form.kyHan : 3);
+          var soLuongMua = Number(vm.form.soLuong) || 1;
+          if (soLuongMua <= 0) {
+            TienIch.thongBao('Số lượng mua phải lớn hơn 0!', 'canh-bao');
+            return;
+          }
+
+          if (kyHanVal === 0) {
+            if (!vm.form.maSoBao) {
+              TienIch.thongBao('Vui lòng chọn kỳ phát hành / số báo cần mua lẻ!', 'canh-bao');
+              return;
+            }
+            if (vm.soBaoChon) {
+              var soLuongIn = Number(vm.soBaoChon.soLuongIn) || 0;
+              var daPh = Number(vm.soBaoChon.soLuongDaPhatHanh) || 0;
+              var conLai = Math.max(0, soLuongIn - daPh);
+
+              if (soLuongMua > soLuongIn) {
+                TienIch.thongBao('Số lượng mua (' + soLuongMua.toLocaleString('vi-VN') + ' bản) không được vượt quá số lượng in (' + soLuongIn.toLocaleString('vi-VN') + ' bản)!', 'canh-bao');
+                return;
+              }
+              if (soLuongMua > conLai) {
+                TienIch.thongBao('Số lượng mua (' + soLuongMua.toLocaleString('vi-VN') + ' bản) vượt quá số lượng bản in còn lại khả dụng (Còn lại ' + conLai.toLocaleString('vi-VN') + ' bản)!', 'canh-bao');
+                return;
+              }
+            }
+          } else {
+            if (!vm.form.ngayBatDau) {
+              TienIch.thongBao('Vui lòng chọn ngày bắt đầu nhận báo!', 'canh-bao');
+              return;
+            }
+          }
+
+          var payload = {
+            maDocGia: Number(vm.form.maDocGia || vm.user.maDocGia || 1),
+            maAnPham: Number(vm.form.maAnPham),
+            maSoBao: (kyHanVal === 0 && vm.form.maSoBao) ? Number(vm.form.maSoBao) : null,
+            ngayDangKy: new Date().toISOString().split('T')[0],
+            ngayBatDau: vm.form.ngayBatDau,
+            ngayKetThuc: vm.form.ngayKetThuc,
+            kyHan: kyHanVal,
+            soLuong: Number(vm.form.soLuong) || 1,
+            trangThai: 'Chờ thanh toán'
+          };
+
+          GoiApiService.dangKyDatBao(payload).then(function() {
+            var thongBaoText = (kyHanVal === 0) 
+              ? 'Đặt mua báo lẻ thành công! Vui lòng sang mục Hóa Đơn để hoàn tất thanh toán.'
+              : 'Đăng ký đặt báo thành công! Vui lòng sang mục Hóa Đơn để hoàn tất thanh toán.';
+            TienIch.thongBao(thongBaoText, 'thanh-cong');
+            vm.hienModal = false;
+            vm.taiDanhSach();
+          }).catch(function(err) {
+            TienIch.thongBao('Lỗi đăng ký: ' + (err.data && err.data.message ? err.data.message : 'Vui lòng kiểm tra lại'), 'canh-bao');
+          });
+        };
+
+        // --- Chức năng Trả Tiền / Thanh Toán cho gói thuê bao ---
+        vm.hienModalTraTien = false;
+        vm.dangKyChon = null;
+        vm.phuongThucTraTien = 'Chuyển khoản';
+
+        vm.moModalTraTien = function(dk) {
+          if (vm.vaiTro !== 'DocGia') {
+            TienIch.thongBao('Quản trị viên và Biên tập viên không thể thực hiện thanh toán thay cho độc giả!', 'canh-bao');
+            return;
+          }
+          vm.dangKyChon = angular.copy(dk);
+          vm.phuongThucTraTien = 'Chuyển khoản';
+
+          // Tính tiền cần thanh toán cho gói đăng ký
+          var ap = (vm.danhSachAnPham || []).find(function(a) { return a.maAnPham == dk.maAnPham; });
+          var donGia = ap ? Number(ap.gia || 0) : 15000;
+          var soTien = (dk.kyHan == 0)
+            ? (donGia * (dk.soLuong || 1))
+            : (donGia * (dk.soLuong || 1) * (dk.kyHan * 30));
+
+          vm.dangKyChon.soTienThanhToan = soTien || 50000;
+          vm.hienModalTraTien = true;
+        };
+
+        vm.layLinkQRDangKy = function() {
+          if (!vm.dangKyChon) return '';
+          return encodeURIComponent('THANH_TOAN_THUE_BAO_' + vm.dangKyChon.maDangKy + '_SO_TIEN_' + (vm.dangKyChon.soTienThanhToan || 0));
+        };
+
+        vm.xacNhanTraTien = function() {
+          if (!vm.dangKyChon) return;
+          var today = new Date();
+          var ngayStr = today.getFullYear() + '-' + ('0' + (today.getMonth() + 1)).slice(-2) + '-' + ('0' + today.getDate()).slice(-2);
+
+          var payload = {
+            maDangKy: Number(vm.dangKyChon.maDangKy),
+            maHoaDon: Number(vm.dangKyChon.maHoaDon || 0),
+            soTien: Number(vm.dangKyChon.soTienThanhToan || 0),
+            ngayThanhToan: ngayStr,
+            phuongThuc: vm.phuongThucTraTien || 'Chuyển khoản',
+            trangThai: 'Đã thanh toán'
+          };
+
+          GoiApiService.thanhToanOnline(payload).then(function() {
+            TienIch.thongBao('Thanh toán thành công! Hệ thống đã lập hóa đơn và kích hoạt gói thuê bao #' + vm.dangKyChon.maDangKy + '.', 'thanh-cong');
+            vm.hienModalTraTien = false;
+            vm.taiDanhSach();
+          }).catch(function(err) {
+            TienIch.thongBao('Lỗi thanh toán: ' + (err.data && err.data.message ? err.data.message : 'Vui lòng thử lại'), 'canh-bao');
+          });
+        };
+
+        vm.huy = function(id) {
+          if (!confirm('Bạn có chắc muốn hủy gói đăng ký #' + id + '?')) return;
+          GoiApiService.huyDangKy(id).then(function() {
+            TienIch.thongBao('Đã hủy đăng ký thành công!', 'thanh-cong');
+            vm.taiDanhSach();
+          }).catch(function(err) {
+            TienIch.thongBao('Lỗi hủy đăng ký: ' + (err.data && err.data.message ? err.data.message : 'Không thể hủy'), 'canh-bao');
+          });
+        };
+
+        vm.taiDanhSach();
+
+        // Tự động mở modal Đặt Báo nếu có tham số từ URL (?datBao=1 hoặc ?maAnPham=...) dành cho Độc giả
+        var urlParams = new URLSearchParams(window.location.search);
+        var paramAnPham = urlParams.get('maAnPham');
+        var paramSoBao = urlParams.get('maSoBao');
+        if (vm.vaiTro === 'DocGia' && (paramAnPham || paramSoBao || urlParams.get('datBao'))) {
+          setTimeout(function() {
+            vm.moModalDangKy();
+            if (paramAnPham) vm.form.maAnPham = Number(paramAnPham);
+            if (paramSoBao) {
+              vm.form.kyHan = 0;
+              vm.form.maSoBao = Number(paramSoBao);
+            }
+            vm.chonAnPham();
+          }, 350);
+        }
+      }]);
+  </script>
+</body>
+</html>

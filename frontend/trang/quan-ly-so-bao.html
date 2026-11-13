@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="vi" ng-app="qlbcApp">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quản Lý Số Báo - Quản lý Báo chí</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%232563eb'><path d='M2 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H2zm12-1a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h12z'/></svg>" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="../css/chung.css" />
+  <link rel="stylesheet" href="../css/bo-cuc.css" />
+  <link rel="stylesheet" href="../css/thanh-phan.css" />
+  <link rel="stylesheet" href="../css/bieu-mau.css" />
+  <style>[ng-cloak] { display: none !important; }</style>
+</head>
+<body ng-cloak ng-controller="SoBaoController as vm">
+  <div id="ung-dung">
+    <div id="overlay-sidebar"></div>
+
+    <aside id="sidebar" aria-label="Thanh bên điều hướng">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-icon"><i class="bi bi-newspaper"></i></div>
+        <div class="sidebar-logo-ten">Quản Lý Báo Chí</div>
+        <button id="nut-thu-gon-sidebar" type="button" class="nut nut-vien nut-nho" title="Thu gọn / Mở rộng">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+      </div>
+      <nav class="sidebar-noi-dung" aria-label="Menu điều hướng chính"></nav>
+      <div class="sidebar-footer"></div>
+    </aside>
+
+    <div id="vung-chinh">
+      <header id="header" style="justify-content: space-between;">
+        <h1 style="font-size: 1.25rem; font-weight: 700; color: var(--xam-900); margin: 0;">
+          <i class="bi bi-file-earmark-text text-primary"></i> {{ vm.vaiTro === 'DocGia' ? 'Tra Cứu Số Báo Đã Phát Hành' : 'Quản Lý Các Kỳ & Số Báo Xuất Bản' }}
+        </h1>
+        <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+          <button ng-if="vm.vaiTro !== 'DocGia'" class="nut nut-phu nut-nho" ng-click="vm.xuatExcel()" title="Xuất file Excel (.xls)">
+            <i class="bi bi-file-earmark-excel text-success"></i> Xuất Excel
+          </button>
+          <button ng-if="vm.vaiTro !== 'DocGia'" class="nut nut-chinh nut-nho" ng-click="vm.moModalThem()">
+            <i class="bi bi-plus-lg"></i> Tạo Số Báo Mới
+          </button>
+          <button class="nut nut-phu nut-nho" ng-click="vm.lamMoi()" title="Làm mới & tải lại danh sách">
+            <i class="bi bi-arrow-clockwise"></i> Làm Mới
+          </button>
+        </div>
+      </header>
+
+      <main class="vung-lam-viec" style="padding: 1.5rem;">
+        <div class="the" style="padding: 1.5rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; gap: 1rem; flex-wrap: wrap;">
+            <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+              <input type="text" class="o-nhap" style="max-width: 280px;" placeholder="Tìm theo tên ấn phẩm, số kỳ, mã..." ng-model="vm.tuKhoa" />
+              <select class="o-nhap" style="width: auto;" ng-model="vm.locAnPham" ng-change="vm.locTheoAnPham()">
+                <option value="">-- Tất cả ấn phẩm --</option>
+                <option ng-repeat="ap in vm.danhSachAnPham" ng-value="ap.maAnPham">{{ ap.tenAnPham }}</option>
+              </select>
+              <select class="o-nhap" style="width: auto;" ng-model="vm.locTrangThai">
+                <option value="">-- {{ vm.vaiTro === 'DocGia' ? 'Tất cả số báo đã/đang phát hành' : 'Tất cả trạng thái' }} --</option>
+                <option value="Đã phát hành">Đã phát hành</option>
+                <option value="Đang phát hành">Đang phát hành</option>
+                <option value="Chuẩn bị phát hành" ng-if="vm.vaiTro !== 'DocGia'">Chuẩn bị phát hành</option>
+              </select>
+            </div>
+            <div style="color: var(--xam-600); font-size: 0.9rem;">
+              Tổng số kỳ báo: <strong>{{ (vm.danhSachDaLoc()).length }}</strong>
+            </div>
+          </div>
+
+          <div class="bang-cuon" style="overflow-x: auto;">
+            <table class="bang">
+              <thead>
+                <tr>
+                  <th>Mã Số Báo</th>
+                  <th>Thuộc Ấn Phẩm</th>
+                  <th>Số Kỳ / Thứ Tự</th>
+                  <th>Ngày Phát Hành</th>
+                  <th ng-if="vm.vaiTro !== 'DocGia'">Số Lượng In</th>
+                  <th>Đã Phát Hành</th>
+                  <th>Trạng Thái</th>
+                  <th ng-if="vm.vaiTro !== 'DocGia'">Thao Tác</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr ng-repeat="sb in vm.danhSachDaLoc()">
+                  <td><strong>#{{ sb.maSoBao }}</strong></td>
+                  <td style="font-weight: 600; color: var(--mau-chinh);">{{ sb.tenAnPham || ('Ấn phẩm ' + sb.maAnPham) }}</td>
+                  <td><span class="badge badge-lam">Số {{ sb.soThuTu }}</span></td>
+                  <td>{{ sb.ngayPhatHanh | dinhDangNgay }}</td>
+                  <td ng-if="vm.vaiTro !== 'DocGia'">{{ sb.soLuongIn | number }} bản</td>
+                  <td style="color: #059669; font-weight: 600;">{{ sb.soLuongDaPhatHanh || 0 | number }} bản</td>
+                  <td>
+                    <span class="badge" ng-class="{
+                      'badge-xanh': sb.trangThai === 'Đã phát hành',
+                      'badge-lam': sb.trangThai === 'Đang phát hành',
+                      'badge-vang': sb.trangThai === 'Chuẩn bị phát hành'
+                    }">{{ sb.trangThai }}</span>
+                  </td>
+                  <td ng-if="vm.vaiTro !== 'DocGia'">
+                    <div style="display: flex; gap: 6px;">
+                      <button class="nut nut-phu nut-nho" ng-click="vm.moModalSua(sb)"><i class="bi bi-pencil"></i> Sửa</button>
+                      <button class="nut nut-nguy-hiem nut-nho" ng-click="vm.xoa(sb.maSoBao)"><i class="bi bi-trash"></i> Xóa</button>
+                    </div>
+                  </td>
+                </tr>
+                <tr ng-if="!vm.danhSachDaLoc().length">
+                  <td colspan="{{ vm.vaiTro !== 'DocGia' ? 8 : 6 }}" style="text-align: center; color: var(--xam-500); padding: 2rem;">
+                    Không tìm thấy số báo nào phù hợp với điều kiện tìm kiếm
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Modal Thêm/Sửa Số Báo -->
+        <div class="modal-overlay" ng-if="vm.hienModal && vm.vaiTro !== 'DocGia'" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;">
+          <div class="the" style="background: white; border-radius: 12px; max-width: 500px; width: 90%; padding: 1.5rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+              <h3 style="margin: 0; font-size: 1.2rem;">{{ vm.dangSua ? 'Cập Nhật Số Báo' : 'Tạo Số Báo Mới' }}</h3>
+              <button class="nut nut-phu nut-nho" ng-click="vm.hienModal = false"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <form ng-submit="vm.luu()" novalidate>
+              <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <div>
+                  <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 4px;">Thuộc Ấn Phẩm *</label>
+                  <select class="o-nhap" ng-model="vm.form.maAnPham" required>
+                    <option value="">-- Chọn ấn phẩm --</option>
+                    <option ng-repeat="ap in vm.danhSachAnPham" ng-value="ap.maAnPham">{{ ap.tenAnPham }}</option>
+                  </select>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                  <div>
+                    <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 4px;">Số Thứ Tự Kỳ Báo *</label>
+                    <input type="number" class="o-nhap" ng-model="vm.form.soThuTu" required min="1" placeholder="Ví dụ: 1, 2, 10..." />
+                  </div>
+                  <div>
+                    <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 4px;">Ngày Phát Hành *</label>
+                    <input type="date" class="o-nhap" ng-model="vm.form.ngayPhatHanhDate" ng-change="vm.kiemTraTrangThaiVaNgay()" required />
+                  </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                  <div>
+                    <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 4px;">Số Lượng In (Bản) *</label>
+                    <input type="number" class="o-nhap" ng-model="vm.form.soLuongIn" required min="1" step="1" />
+                    <small ng-if="vm.dangSua && vm.form.soLuongDaPhatHanh" style="color: var(--xam-500); font-size: 0.75rem; display: block; margin-top: 2px;">
+                      Đã phát hành: {{ vm.form.soLuongDaPhatHanh | number }} bản
+                    </small>
+                  </div>
+                  <div>
+                    <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 4px;">Trạng Thái</label>
+                    <select class="o-nhap" ng-model="vm.form.trangThai" ng-change="vm.kiemTraTrangThaiVaNgay()">
+                      <option value="Chuẩn bị phát hành">Chuẩn bị phát hành</option>
+                      <option value="Đang phát hành">Đang phát hành</option>
+                      <option value="Đã phát hành">Đã phát hành</option>
+                    </select>
+                  </div>
+                </div>
+                <div ng-if="vm.canhBaoNgay" style="background: #fff1f2; color: #e11d48; padding: 8px 12px; border-radius: 6px; font-size: 0.82rem; border: 1px solid #fecdd3;">
+                  <i class="bi bi-exclamation-triangle-fill"></i> {{ vm.canhBaoNgay }}
+                </div>
+              </div>
+              <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+                <button type="button" class="nut nut-phu" ng-click="vm.hienModal = false">Hủy</button>
+                <button type="submit" class="nut nut-chinh"><i class="bi bi-check-lg"></i> {{ vm.dangSua ? 'Cập Nhật' : 'Lưu Kỳ Báo' }}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script src="../angular.min.js"></script>
+  <script src="../js/cau-hinh.js?v=20261113_fix"></script>
+  <script src="../js/angular-app.js?v=20261113_fix"></script>
+  <script src="../js/xac-thuc.js?v=20261113_fix"></script>
+  <script src="../js/tien-ich.js?v=20261113_fix"></script>
+  <script src="../js/goi-api.js?v=20261113_fix"></script>
+  <script src="../js/dieu-huong.js?v=20261113_fix"></script>
+  <script>
+    angular.module('qlbcApp')
+      .controller('SoBaoController', ['GoiApiService', function(GoiApiService) {
+        var vm = this;
+        // Cho phép mọi người dùng đã đăng nhập (Admin, Biên tập viên, Độc giả) vào tra cứu
+        vm.user = XacThuc.kiemTraQuyen([]);
+        if (!vm.user) return;
+        vm.vaiTro = XacThuc.chuanHoaVaiTro ? XacThuc.chuanHoaVaiTro(vm.user.vaiTro || vm.user.quyenHan || vm.user.quyen || 'DocGia') : (vm.user.vaiTro || 'DocGia');
+
+        vm.danhSach = [];
+        vm.danhSachAnPham = [];
+        vm.tuKhoa = '';
+        vm.locAnPham = '';
+        vm.locTrangThai = '';
+        vm.hienModal = false;
+        vm.dangSua = false;
+        vm.form = {};
+
+        vm.danhSachDaLoc = function() {
+          if (!vm.danhSach) return [];
+          return vm.danhSach.filter(function(sb) {
+            // Bộ lọc trạng thái
+            if (vm.vaiTro === 'DocGia') {
+              if (vm.locTrangThai) {
+                if (sb.trangThai !== vm.locTrangThai) return false;
+              } else {
+                // Độc giả mặc định tra cứu các số báo Đã phát hành hoặc Đang phát hành
+                if (sb.trangThai !== 'Đã phát hành' && sb.trangThai !== 'Đang phát hành') return false;
+              }
+            } else {
+              if (vm.locTrangThai && sb.trangThai !== vm.locTrangThai) return false;
+            }
+
+            // Từ khóa tìm kiếm
+            if (vm.tuKhoa) {
+              var kw = vm.tuKhoa.toLowerCase();
+              var ten = (sb.tenAnPham || '').toLowerCase();
+              var soThuTu = (sb.soThuTu || '').toString();
+              var ma = (sb.maSoBao || '').toString();
+              var tt = (sb.trangThai || '').toLowerCase();
+              var match = ten.indexOf(kw) !== -1 || soThuTu.indexOf(kw) !== -1 || ma.indexOf(kw) !== -1 || tt.indexOf(kw) !== -1;
+              if (!match) return false;
+            }
+            return true;
+          });
+        };
+
+        vm.taiDanhSach = function() {
+          GoiApiService.layDanhSachAnPham().then(function(res) {
+            vm.danhSachAnPham = Array.isArray(res.data) ? res.data : [];
+          });
+
+          GoiApiService.layDanhSachSoBao().then(function(res) {
+            vm.danhSach = Array.isArray(res.data) ? res.data : [];
+          }).catch(function(err) {
+            console.warn('Lỗi tải danh sách số báo', err);
+          });
+        };
+
+        vm.lamMoi = function() {
+          vm.tuKhoa = '';
+          vm.locAnPham = '';
+          vm.locTrangThai = '';
+          vm.taiDanhSach();
+        };
+
+        vm.locTheoAnPham = function() {
+          if (!vm.locAnPham) {
+            vm.taiDanhSach();
+            return;
+          }
+          GoiApiService.laySoBaoTheoAnPham(vm.locAnPham).then(function(res) {
+            vm.danhSach = Array.isArray(res.data) ? res.data : [];
+          }).catch(function(err) {
+            console.warn('Lỗi lọc theo ấn phẩm', err);
+          });
+        };
+
+        vm.canhBaoNgay = '';
+
+        vm.kiemTraTrangThaiVaNgay = function() {
+          vm.canhBaoNgay = '';
+          if (!vm.form.ngayPhatHanhDate) return;
+          var tt = vm.form.trangThai;
+          if (tt === 'Đã phát hành' || tt === 'Đang phát hành' || tt === 'Phát hành') {
+            var d = new Date(vm.form.ngayPhatHanhDate);
+            var now = new Date();
+            d.setHours(0, 0, 0, 0);
+            now.setHours(0, 0, 0, 0);
+            if (d > now) {
+              vm.canhBaoNgay = 'Ngày phát hành không hợp lệ';
+            }
+          }
+        };
+
+        vm.moModalThem = function() {
+          if (vm.vaiTro === 'DocGia') return;
+          vm.dangSua = false;
+          vm.canhBaoNgay = '';
+          vm.form = {
+            maAnPham: vm.danhSachAnPham.length ? vm.danhSachAnPham[0].maAnPham : '',
+            soThuTu: (vm.danhSach.length + 1),
+            ngayPhatHanhDate: new Date(),
+            soLuongIn: 1000,
+            soLuongDaPhatHanh: 0,
+            trangThai: 'Chuẩn bị phát hành'
+          };
+          vm.hienModal = true;
+        };
+
+        vm.moModalSua = function(sb) {
+          if (vm.vaiTro === 'DocGia') return;
+          vm.dangSua = true;
+          vm.canhBaoNgay = '';
+          vm.form = {
+            maSoBao: sb.maSoBao,
+            maAnPham: sb.maAnPham,
+            soThuTu: sb.soThuTu,
+            ngayPhatHanhDate: sb.ngayPhatHanh ? new Date(sb.ngayPhatHanh) : new Date(),
+            soLuongIn: sb.soLuongIn || 1000,
+            soLuongDaPhatHanh: sb.soLuongDaPhatHanh || 0,
+            trangThai: sb.trangThai || 'Chuẩn bị phát hành'
+          };
+          vm.kiemTraTrangThaiVaNgay();
+          vm.hienModal = true;
+        };
+
+        vm.luu = function() {
+          if (vm.vaiTro === 'DocGia') return;
+          if (!vm.form.maAnPham || !vm.form.soThuTu) {
+            alert('Vui lòng chọn ấn phẩm và nhập số thứ tự kỳ báo!');
+            return;
+          }
+
+          var soLuongIn = Number(vm.form.soLuongIn) || 0;
+          if (soLuongIn <= 0) {
+            alert('Số lượng in phải lớn hơn 0!');
+            return;
+          }
+
+          if (vm.dangSua && vm.form.soLuongDaPhatHanh && soLuongIn < Number(vm.form.soLuongDaPhatHanh)) {
+            alert('Số lượng in (' + soLuongIn.toLocaleString('vi-VN') + ' bản) không được nhỏ hơn số lượng đã phát hành (' + Number(vm.form.soLuongDaPhatHanh).toLocaleString('vi-VN') + ' bản)!');
+            return;
+          }
+
+          // Kiểm tra ngày phát hành không được vượt quá ngày hiện tại nếu trạng thái là Đã phát hành / Đang phát hành
+          var d = vm.form.ngayPhatHanhDate ? new Date(vm.form.ngayPhatHanhDate) : new Date();
+          var now = new Date();
+          var ngayStr = d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+          var todayStr = now.getFullYear() + '-' + ('0' + (now.getMonth() + 1)).slice(-2) + '-' + ('0' + now.getDate()).slice(-2);
+
+          var trangThai = vm.form.trangThai || 'Chuẩn bị phát hành';
+          var laTrangThaiDaPhatHanh = (trangThai === 'Đã phát hành' || trangThai === 'Đang phát hành' || trangThai === 'Phát hành');
+
+          if (laTrangThaiDaPhatHanh && ngayStr > todayStr) {
+            alert('Ngày phát hành không hợp lệ');
+            return;
+          }
+
+          var payload = {
+            maSoBao: vm.dangSua ? vm.form.maSoBao : 0,
+            maAnPham: Number(vm.form.maAnPham),
+            soThuTu: Number(vm.form.soThuTu),
+            ngayPhatHanh: ngayStr,
+            soLuongIn: soLuongIn,
+            soLuongDaPhatHanh: vm.dangSua ? (Number(vm.form.soLuongDaPhatHanh) || 0) : 0,
+            trangThai: trangThai
+          };
+
+          if (vm.dangSua) {
+            GoiApiService.capNhatSoBao(payload).then(function() {
+              alert('Cập nhật số báo thành công!');
+              vm.hienModal = false;
+              vm.taiDanhSach();
+            }).catch(function(err) {
+              alert('Lỗi cập nhật: ' + (err.data && err.data.message ? err.data.message : ''));
+            });
+          } else {
+            GoiApiService.themSoBao(payload).then(function() {
+              alert('Tạo kỳ báo mới thành công!');
+              vm.hienModal = false;
+              vm.taiDanhSach();
+            }).catch(function(err) {
+              alert('Lỗi tạo số báo: ' + (err.data && err.data.message ? err.data.message : ''));
+            });
+          }
+        };
+
+        vm.xoa = function(id) {
+          if (vm.vaiTro === 'DocGia') return;
+          if (!confirm('Bạn có chắc muốn xóa số báo #' + id + '?')) return;
+          GoiApiService.xoaSoBao(id).then(function() {
+            alert('Đã xóa thành công!');
+            vm.taiDanhSach();
+          }).catch(function() {
+            alert('Lỗi xóa số báo');
+          });
+        };
+
+        // Xuất Excel (.xls)
+        vm.xuatExcel = function() {
+          var data = vm.danhSachHienThi ? vm.danhSachHienThi : vm.danhSach;
+          if (!data || !data.length) {
+            TienIch.thongBao('Không có dữ liệu số báo để xuất Excel!', 'canh-bao');
+            return;
+          }
+          var cot = [
+            { field: 'maSoBao', title: 'Mã Số Báo' },
+            { field: 'tenAnPham', title: 'Ấn Phẩm' },
+            { field: 'soThuTu', title: 'Số Thứ Tự / Kỳ' },
+            { field: 'ngayPhatHanh', title: 'Ngày Phát Hành' },
+            { field: 'soLuongIn', title: 'Số Lượng In' },
+            { field: 'soLuongDaPhatHanh', title: 'Đã Phát Hành' },
+            { field: 'trangThai', title: 'Trạng Thái' }
+          ];
+          TienIch.xuatExcel(data, cot, 'DanhSachSoBao_' + new Date().toISOString().slice(0, 10));
+        };
+
+        vm.taiDanhSach();
+      }]);
+  </script>
+</body>
+</html>
